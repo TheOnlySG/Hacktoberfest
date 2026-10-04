@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SwiftCourier Damage Inspection Visit",
+  "type": "object",
+  "properties": {
+    "awb": { "type": "string" },
+    "delivery_date": { "type": "string", "format": "date" },
+    "damage_type": { "type": "string" },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "outer_package_photos_attached": { "type": "boolean" },
+        "delivery_notification_attached": { "type": "boolean" }
+      }
+    },
+    "logistics": {
+      "type": "object",
+      "properties": {
+        "consignee_name": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "visit_slots": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "shipper_claim_ref": { "type": "string", "description": "Dependency on ShopMart ticket ID" },
+    "consent": {
+      "type": "object",
+      "properties": {
+        "inspector_can_photograph": { "type": "boolean" }
+      }
+    }
+  },
+  "required": ["awb", "delivery_date", "damage_type", "logistics"]
+}

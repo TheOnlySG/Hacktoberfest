@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Org Profile",
+  "description": "Definition of an organization's requirements and channels for Passage",
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "Unique identifier for the organization"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the organization"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Industry or domain of the organization"
+    },
+    "channels": {
+      "type": "array",
+      "description": "Ordered list of ways to reach the organization",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sandbox_api", "email", "helpdesk_rest", "open311", "passage_link", "generic_webhook", "assisted_manual"]
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "address": {
+            "type": "string"
+          }
+        },
+        "required": ["type", "priority"]
+      }
+    },
+    "ticket_type": {
+      "type": "string",
+      "description": "Identifier for the type of ticket this organization expects"
+    },
+    "schema": {
+      "type": "string",
+      "description": "Path to the JSON Schema for the ticket"
+    },
+    "triggers": {
+      "type": "object",
+      "properties": {
+        "identifiers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "issue_types": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "required_fields": {
+      "type": "array",
+      "description": "Fields that must be present before a draft can be approved",
+      "items": { "type": "string" }
+    },
+    "evidence_policy": {
+      "type": "object",
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "deny": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "org": { "type": "string" },
+          "need": { "type": "string" },
+          "as": { "type": "string" }
+        },
+        "required": ["org", "need", "as"]
+      }
+    },
+    "sla": {
+      "type": "object",
+      "properties": {
+        "first_response_hours": { "type": "integer" },
+        "resolution_hours": { "type": "integer" },
+        "escalate_to": { "type": "string" }
+      }
+    },
+    "status_map": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["submitted", "acknowledged", "in_progress", "needs_info", "resolved", "rejected", "escalated", "withdrawn"]
+      }
+    },
+    "verified": {
+      "type": "object",
+      "properties": {
+        "by": { "type": "string" },
+        "on": { "type": "string", "format": "date" },
+        "source": { "type": "string" }
+      },
+      "required": ["by", "on", "source"]
+    }
+  },
+  "required": [
+    "slug", "name", "domain", "channels", "ticket_type", "schema",
+    "triggers", "required_fields", "evidence_policy", "status_map", "verified"
+  ]
+}

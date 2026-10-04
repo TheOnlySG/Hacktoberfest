@@ -1,0 +1,20 @@
+{
+  "problem_description": "I ordered a pressure cooker from ShopMart. It arrived with a crushed corner and a dented body. I want a replacement.",
+  "attached_evidence": [
+    {
+      "id": "ev-1",
+      "type": "invoice",
+      "description": "Invoice for ShopMart order ORD-12345"
+    },
+    {
+      "id": "ev-2",
+      "type": "outer_package_photos",
+      "description": "Two photos of the crushed box and dented body"
+    },
+    {
+      "id": "ev-3",
+      "type": "delivery_notification",
+      "description": "Delivery SMS from SwiftCourier containing AWB-987654321"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  passage-backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - USE_CACHED_AI=true
+      - ZAMMAD_URL=http://zammad:8080/api/v1
+      - ZAMMAD_TOKEN=demo_token
+      - OPEN311_URL=http://fixmystreet:80/open311/v2
+      - OPEN311_API_KEY=demo_key
+    volumes:
+      - ./backend:/app
+      - ./protocol:/protocol
+      - ./ai:/ai
+    depends_on:
+      - mailpit
+      
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP
+    environment:
+      MP_MAX_MESSAGES: 500
+
+  # Note: Zammad and FixMyStreet are complex applications requiring their own DBs, 
+  # ElasticSearch, Redis, etc. For this hackathon demo architecture, we define them 
+  # here to satisfy the requirement of running them as independent AGPL services.
+  # To run them fully, use their official docker-compose overrides.
+  
+  zammad:
+    image: zammad/zammad-docker-compose:zammad
+    ports:
+      - "8080:8080"
+    environment:
+      - ZAMMAD_RAILSSERVER_HOST=0.0.0.0
+    # In a full deployment, this requires PostgreSQL, Redis, and Elasticsearch containers.
+    # We leave those out of the core Passage compose for brevity, but they would be linked here.
+    
+  fixmystreet:
+    image: mysociety/cobrand
+    ports:
+      - "8081:80"
+    # In a full deployment, this requires PostgreSQL.

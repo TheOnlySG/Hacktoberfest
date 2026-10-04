@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body { font-family: Arial, sans-serif; }
+    table { border-collapse: collapse; width: 100%; max-width: 600px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; width: 40%; }
+</style>
+</head>
+<body>
+    <h2>New Passage Submission: {{ org_slug }}</h2>
+    <p>Ticket Reference: <strong>{{ ticket_ref }}</strong></p>
+    
+    <h3>Fields</h3>
+    <table>
+        {% for key, value in fields.items() %}
+        <tr>
+            <th>{{ key }}</th>
+            <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>Evidence Provided</h3>
+    <ul>
+        {% for ev_key, is_provided in evidence.items() %}
+            {% if is_provided %}
+            <li>{{ ev_key }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    
+    <hr>
+    <p><small>Sent via Passage Dispatcher</small></p>
+</body>
+</html>

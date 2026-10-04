@@ -1,0 +1,24 @@
+{
+  "orgs": [
+    {
+      "slug": "shopmart",
+      "reason": "Identifier 'ShopMart Order ID' found in problem description.",
+      "source": "rule_matched",
+      "dispatch_order": 1,
+      "dependencies": []
+    },
+    {
+      "slug": "swiftcourier",
+      "reason": "Identifier 'AWB tracking number' found in evidence.",
+      "source": "rule_matched",
+      "dispatch_order": 2,
+      "dependencies": [
+        {
+          "org": "shopmart",
+          "need": "ticket_ref",
+          "as": "shipper_claim_ref"
+        }
+      ]
+    }
+  ]
+}

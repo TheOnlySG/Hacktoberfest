@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Power Utility Safety Hazard Report",
+  "type": "object",
+  "properties": {
+    "location": { "type": "string" },
+    "landmark": { "type": "string" },
+    "nearest_pole_or_box_number": { "type": "string" },
+    "hazard_type": { "type": "string", "enum": ["submerged_electrical_equipment", "fallen_line"] },
+    "immediate_danger": { "type": "boolean" },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "street_photos_attached": { "type": "boolean" },
+        "meter_box_photo_attached": { "type": "boolean" }
+      }
+    },
+    "site_contact": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" }
+      }
+    }
+  },
+  "required": ["location", "hazard_type", "immediate_danger", "site_contact"]
+}

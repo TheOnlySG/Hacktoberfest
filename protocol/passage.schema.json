@@ -1,0 +1,214 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Passage",
+  "description": "A user-owned resolution record that structures a real-world problem",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this Passage"
+    },
+    "problem_description": {
+      "type": "string",
+      "description": "The person's description of the problem in their own words"
+    },
+    "timeline": {
+      "type": "array",
+      "description": "Chronological timeline of events related to the problem",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["user", "document", "ai", "external_org"]
+          }
+        },
+        "required": ["timestamp", "description", "source"]
+      }
+    },
+    "entities": {
+      "type": "object",
+      "description": "Key identifiers and entities extracted from the problem",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "description": "List of attached evidence files or metadata",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of evidence (e.g., invoice, outer_package_photos)"
+          },
+          "description": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": ["id", "type"]
+      }
+    },
+    "requested_outcome": {
+      "type": "string",
+      "description": "What the user wants to happen to resolve the problem"
+    },
+    "org_plan": {
+      "type": "object",
+      "properties": {
+        "orgs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "slug": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "enum": ["rule_matched", "ai_suggested", "user_added"]
+              },
+              "dispatch_order": {
+                "type": "integer"
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "org": {
+                      "type": "string"
+                    },
+                    "need": {
+                      "type": "string"
+                    },
+                    "as": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["org", "need", "as"]
+                }
+              }
+            },
+            "required": ["slug", "reason", "source", "dispatch_order"]
+          }
+        }
+      }
+    },
+    "consent_records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "draft_id": {
+            "type": "string"
+          },
+          "org_slug": {
+            "type": "string"
+          },
+          "approved_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "approved_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "relay_rules": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "approved_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": ["draft_id", "org_slug", "approved_fields", "approved_evidence", "approved_at"]
+      }
+    },
+    "tickets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "org_slug": {
+            "type": "string"
+          },
+          "ticket_ref": {
+            "type": "string",
+            "description": "External reference ID from the organization"
+          },
+          "normalized_status": {
+            "type": "string",
+            "enum": ["submitted", "acknowledged", "in_progress", "needs_info", "resolved", "rejected", "escalated", "withdrawn"]
+          },
+          "raw_status": {
+            "type": "string"
+          },
+          "last_sync_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "org_slug", "normalized_status"]
+      }
+    },
+    "hash_chain": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "event_type": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "prev_hash": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": ["event_type", "timestamp", "hash"]
+      }
+    }
+  },
+  "required": ["id", "problem_description", "timeline", "entities", "evidence", "requested_outcome"]
+}

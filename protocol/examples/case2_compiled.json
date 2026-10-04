@@ -1,0 +1,41 @@
+{
+  "cache_label": "Saved output from Llama 3.3 70B via Groq API on 2026-10-04",
+  "model": "llama-3.3-70b-versatile",
+  "id": "p-1002",
+  "problem_description": "User's UPI payment failed on PayEasy but the amount was debited from Northfield Bank account. Refund has not been processed after 3 days.",
+  "timeline": [
+    {
+      "timestamp": "2026-10-01T08:00:00Z",
+      "description": "UPI payment initiated via PayEasy to Ramesh.",
+      "source": "user"
+    },
+    {
+      "timestamp": "2026-10-01T08:05:00Z",
+      "description": "Amount 500 debited from Northfield Bank account ending 1234.",
+      "source": "document"
+    }
+  ],
+  "entities": {
+    "bank": "Northfield Bank",
+    "app": "PayEasy",
+    "account_last_four": "1234",
+    "payee": "Ramesh",
+    "amount": "500",
+    "transaction_type": "UPI"
+  },
+  "evidence": [
+    {
+      "id": "ev-1",
+      "type": "screenshot",
+      "description": "Screenshot of PayEasy app showing transaction failed",
+      "metadata": {}
+    },
+    {
+      "id": "ev-2",
+      "type": "statement_extract",
+      "description": "Bank statement showing 500 debited from account ending 1234",
+      "metadata": {}
+    }
+  ],
+  "requested_outcome": "refund"
+}

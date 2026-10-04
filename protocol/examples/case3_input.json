@@ -1,0 +1,20 @@
+{
+  "problem_description": "A huge water pipe burst on 5th Avenue and flooded my parked car. I want the municipality to fix the leak and my insurance to cover the water damage.",
+  "attached_evidence": [
+    {
+      "id": "ev-1",
+      "type": "street_photos",
+      "description": "Photos of the burst pipe and flooded street"
+    },
+    {
+      "id": "ev-2",
+      "type": "vehicle_photos",
+      "description": "Photos of water inside the car"
+    },
+    {
+      "id": "ev-3",
+      "type": "policy_copy",
+      "description": "Shield Motor Insurance Policy Doc"
+    }
+  ]
+}

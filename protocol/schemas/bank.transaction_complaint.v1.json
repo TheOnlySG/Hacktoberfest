@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Northfield Bank Transaction Complaint",
+  "type": "object",
+  "properties": {
+    "account_last_four": { "type": "string", "pattern": "^[0-9]{4}$" },
+    "debit_rrn": { "type": "string" },
+    "debit_date": { "type": "string", "format": "date" },
+    "complaint_type": { "type": "string", "enum": ["debited_not_credited"] },
+    "channel": { "type": "string", "enum": ["UPI", "IMPS", "NEFT"] },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "statement_extract_attached": { "type": "boolean" }
+      }
+    },
+    "app_ticket_reference": { "type": "string" },
+    "requested_action": { "type": "string", "enum": ["reversal"] }
+  },
+  "required": ["account_last_four", "debit_rrn", "debit_date", "complaint_type", "channel"]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Municipal Water Dept GeoReport Service Request",
+  "type": "object",
+  "properties": {
+    "jurisdiction_id": { "type": "string" },
+    "service_code": { "type": "string", "enum": ["water_main_leak"] },
+    "lat": { "type": "number" },
+    "long": { "type": "number" },
+    "address_string": { "type": "string" },
+    "description": { "type": "string" },
+    "media_url": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" }
+    },
+    "first_name": { "type": "string" },
+    "last_name": { "type": "string" },
+    "email": { "type": "string", "format": "email" },
+    "phone": { "type": "string" }
+  },
+  "required": ["service_code", "lat", "long", "description", "first_name", "last_name", "email"]
+}

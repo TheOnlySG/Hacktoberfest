@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Shield Motor Insurance Claim Intimation",
+  "type": "object",
+  "properties": {
+    "policy_number": { "type": "string" },
+    "vehicle_registration": { "type": "string" },
+    "place_of_loss": { "type": "string" },
+    "cause_of_loss": { "type": "string", "enum": ["flooding_from_public_infrastructure_failure", "collision", "theft"] },
+    "damage_description": { "type": "string" },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "vehicle_photos_attached": { "type": "boolean" },
+        "policy_copy_attached": { "type": "boolean" },
+        "repair_estimate_attached": { "type": "boolean" }
+      }
+    },
+    "third_party_reference": {
+      "type": "object",
+      "properties": {
+        "municipal_request_id": { "type": "string" },
+        "passage_timeline_fingerprint": { "type": "string" }
+      }
+    }
+  },
+  "required": ["policy_number", "vehicle_registration", "place_of_loss", "cause_of_loss", "damage_description"]
+}

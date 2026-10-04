@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PayEasy Payment Dispute",
+  "type": "object",
+  "properties": {
+    "upi_transaction_id": { "type": "string" },
+    "payer_vpa": { "type": "string" },
+    "payee_vpa": { "type": "string" },
+    "app_status": { "type": "string", "enum": ["failed", "pending"] },
+    "amount_debited": { "type": "number" },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "screenshot_attached": { "type": "boolean" }
+      }
+    },
+    "preferred_outcome": { "type": "string", "enum": ["auto-reversal", "refund"] }
+  },
+  "required": ["upi_transaction_id", "payer_vpa", "payee_vpa", "app_status", "amount_debited"]
+}

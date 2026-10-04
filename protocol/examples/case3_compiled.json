@@ -1,0 +1,45 @@
+{
+  "cache_label": "Saved output from Llama 3.3 70B via Groq API on 2026-10-04",
+  "model": "llama-3.3-70b-versatile",
+  "id": "p-1003",
+  "problem_description": "A burst water pipe on 5th Avenue flooded the user's parked car. User requests municipal repair of the leak and insurance claim for vehicle damage.",
+  "timeline": [
+    {
+      "timestamp": "2026-10-04T07:30:00Z",
+      "description": "Water pipe burst on 5th Avenue, flooding the street.",
+      "source": "user"
+    },
+    {
+      "timestamp": "2026-10-04T08:00:00Z",
+      "description": "User's parked car was flooded by the burst pipe.",
+      "source": "user"
+    }
+  ],
+  "entities": {
+    "location": "5th Avenue",
+    "issue_type": "water pipe burst",
+    "damage": "flooded parked car",
+    "insurer": "Shield Motor Insurance"
+  },
+  "evidence": [
+    {
+      "id": "ev-1",
+      "type": "street_photos",
+      "description": "Photos of the burst pipe and flooded street",
+      "metadata": {}
+    },
+    {
+      "id": "ev-2",
+      "type": "vehicle_photos",
+      "description": "Photos of water inside the car",
+      "metadata": {}
+    },
+    {
+      "id": "ev-3",
+      "type": "policy_copy",
+      "description": "Shield Motor Insurance Policy Doc",
+      "metadata": {}
+    }
+  ],
+  "requested_outcome": "fix leak and process insurance claim"
+}

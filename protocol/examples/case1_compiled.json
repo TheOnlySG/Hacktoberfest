@@ -1,0 +1,46 @@
+{
+  "cache_label": "Saved output from Llama 3.3 70B via Groq API on 2026-10-04",
+  "model": "llama-3.3-70b-versatile",
+  "id": "p-1001",
+  "problem_description": "The user ordered a pressure cooker from ShopMart which arrived damaged with a crushed corner and dented body. The user is requesting a replacement.",
+  "timeline": [
+    {
+      "timestamp": "2026-10-01T10:00:00Z",
+      "description": "Pressure cooker ordered from ShopMart (ORD-12345).",
+      "source": "document"
+    },
+    {
+      "timestamp": "2026-10-03T14:30:00Z",
+      "description": "Package delivered by SwiftCourier (AWB-987654321). Package had a crushed corner and dented body.",
+      "source": "document"
+    }
+  ],
+  "entities": {
+    "order_id": "ORD-12345",
+    "awb": "AWB-987654321",
+    "merchant": "ShopMart",
+    "courier": "SwiftCourier",
+    "delivery_date": "2026-10-03"
+  },
+  "evidence": [
+    {
+      "id": "ev-1",
+      "type": "invoice",
+      "description": "Invoice for ShopMart order ORD-12345",
+      "metadata": {}
+    },
+    {
+      "id": "ev-2",
+      "type": "outer_package_photos",
+      "description": "Two photos of the crushed box and dented body",
+      "metadata": {}
+    },
+    {
+      "id": "ev-3",
+      "type": "delivery_notification",
+      "description": "Delivery SMS from SwiftCourier containing AWB-987654321",
+      "metadata": {}
+    }
+  ],
+  "requested_outcome": "replacement"
+}

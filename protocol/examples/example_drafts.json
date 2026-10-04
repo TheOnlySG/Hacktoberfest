@@ -1,0 +1,59 @@
+[
+  {
+    "draft_id": "d-1",
+    "org_slug": "shopmart",
+    "status": "draft",
+    "ticket_type": "marketplace.return_replace.v1",
+    "fields": {
+      "order_id": "ORD-12345",
+      "item_sku": "SKU-999",
+      "issue_type": "damaged_on_arrival",
+      "requested_outcome": "replacement",
+      "logistics": {
+        "pickup_address": "123 Main St, Apt 4B",
+        "contact_window": "9 AM - 5 PM"
+      }
+    },
+    "evidence_selection": {
+      "invoice_attached": true,
+      "photos_attached": true
+    },
+    "field_sources": {
+      "order_id": "document",
+      "item_sku": "document",
+      "issue_type": "ai",
+      "requested_outcome": "user"
+    }
+  },
+  {
+    "draft_id": "d-2",
+    "org_slug": "swiftcourier",
+    "status": "draft",
+    "ticket_type": "courier.damage_inspection.v1",
+    "fields": {
+      "awb": "AWB-987654321",
+      "delivery_date": "2026-10-03",
+      "damage_type": "Crushed corner, dented body",
+      "logistics": {
+        "consignee_name": "Mira",
+        "phone": "555-0199",
+        "address": "123 Main St, Apt 4B",
+        "visit_slots": ["2026-10-05 Morning", "2026-10-05 Afternoon"]
+      },
+      "shipper_claim_ref": null,
+      "consent": {
+        "inspector_can_photograph": true
+      }
+    },
+    "evidence_selection": {
+      "outer_package_photos_attached": true,
+      "delivery_notification_attached": true
+    },
+    "field_sources": {
+      "awb": "document",
+      "delivery_date": "document",
+      "damage_type": "user",
+      "logistics": "user"
+    }
+  }
+]

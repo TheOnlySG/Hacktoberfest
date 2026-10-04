@@ -1,0 +1,15 @@
+{
+  "problem_description": "My UPI payment to Ramesh via PayEasy failed but money was deducted from my Northfield Bank account. It has been 3 days and I haven't got the refund.",
+  "attached_evidence": [
+    {
+      "id": "ev-1",
+      "type": "screenshot",
+      "description": "Screenshot of PayEasy app showing transaction failed"
+    },
+    {
+      "id": "ev-2",
+      "type": "statement_extract",
+      "description": "Bank statement showing 500 debited from account ending 1234"
+    }
+  ]
+}
