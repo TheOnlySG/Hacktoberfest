@@ -46,3 +46,7 @@ ehthumbs.db
 Thumbs.db
 # Testing
 .pytest_cache/
+
+# Raw Stitch assets
+stitch_passage_dispute_resolution_web_app.zip
+stitch_passage_dispute_resolution_web_app/

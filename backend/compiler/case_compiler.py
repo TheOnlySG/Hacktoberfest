@@ -11,14 +11,20 @@ def get_groq_client():
 
 def compile_passage(user_text: str, evidence_metadata: list, schema: dict) -> dict:
     if settings.USE_CACHED_AI:
-        # Load from cached run
-        import json
-        cache_path = os.path.join(os.path.dirname(__file__), '../../protocol/examples/case1_compiled.json')
+        text_lower = (user_text or "").lower()
+        if any(w in text_lower for w in ["upi", "payeasy", "northfield", "debited", "ramesh", "2,850", "2850"]):
+            filename = 'case2_compiled.json'
+        elif any(w in text_lower for w in ["pipe", "burst", "water", "flood", "avenue", "utility", "car", "submerged", "municipal", "mwd"]):
+            filename = 'case3_compiled.json'
+        else:
+            filename = 'case1_compiled.json'
+
+        cache_path = os.path.join(os.path.dirname(__file__), '../../protocol/examples', filename)
         if os.path.exists(cache_path):
             with open(cache_path, 'r') as f:
                 return json.load(f)
         else:
-            return {"error": "Cached AI run not found and USE_CACHED_AI is True."}
+            return {"error": f"Cached AI run {filename} not found."}
 
     client = get_groq_client()
     

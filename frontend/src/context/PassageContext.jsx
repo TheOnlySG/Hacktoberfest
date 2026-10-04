@@ -196,7 +196,15 @@ export const PassageProvider = ({ children }) => {
       // Update ticket references if backend returned them
       if (dispatchedTickets && Array.isArray(dispatchedTickets)) {
         setOrganizations(prev => prev.map(org => {
-          const match = dispatchedTickets.find(t => t.org_slug === org.slug);
+          const match = dispatchedTickets.find(t => 
+            t.org_slug === org.slug ||
+            (t.org_slug === 'swiftcourier' && org.slug === 'swiftroute') ||
+            (t.org_slug === 'swiftroute' && org.slug === 'swiftcourier') ||
+            (t.org_slug === 'northfield_bank' && org.slug === 'northfield') ||
+            (t.org_slug === 'municipal_water' && org.slug === 'open311') ||
+            (t.org_slug === 'power_utility' && org.slug === 'powerutility') ||
+            (t.org_slug === 'shield_insurance' && org.slug === 'shieldmotor')
+          );
           if (match) {
             return {
               ...org,
@@ -261,6 +269,16 @@ export const PassageProvider = ({ children }) => {
     setAnsweredQuestions(prev => [...prev, answered]);
     setPendingQuestion(null);
 
+    // Call backend API to relay answer
+    if (backendPassageId || pendingQuestion.id) {
+      api.answerQuestion(pendingQuestion.id || 'q-default', {
+        ticket_id: pendingQuestion.ticketRef || 'SR-INSP-4019',
+        org_slug: pendingQuestion.orgSlug || 'swiftcourier',
+        answer_text: selectedOption,
+        attachments: []
+      }).catch(err => console.warn('[API] Relay error:', err));
+    }
+
     // Add relay event to timeline
     setTimelineEvents(prev => [
       ...prev,
@@ -305,6 +323,12 @@ export const PassageProvider = ({ children }) => {
 
   // Authorize Escalation
   const authorizeEscalationFiling = () => {
+    // Call backend escalation approval API
+    api.approveEscalation(activeCase.id || 'esc-default', {
+      approved: true,
+      edited_text: activeCase.escalation.draftSummary
+    }).catch(err => console.warn('[API] Escalation approval error:', err));
+
     setTimelineEvents(prev => [
       ...prev,
       {
@@ -382,6 +406,12 @@ export const PassageProvider = ({ children }) => {
     }));
 
     const orgObj = organizations.find(o => o.slug === orgSlug);
+
+    // Call backend sandbox status endpoint
+    if (orgObj?.ticketRef) {
+      api.updateSandboxStatus(orgSlug, orgObj.ticketRef, newStatus).catch(e => console.warn(e));
+    }
+
     setTimelineEvents(prev => [
       ...prev,
       {

@@ -13,15 +13,88 @@ def load_org_profiles():
             with open(os.path.join(orgs_dir, filename), 'r') as f:
                 data = json.load(f)
                 profiles[data['slug']] = data
+
+    # Aliases for frontend and protocol cross-compatibility
+    aliases = {
+        'swiftroute': 'swiftcourier',
+        'northfield': 'northfield_bank',
+        'northfield-bank': 'northfield_bank',
+        'open311': 'municipal_water',
+        'municipal-water': 'municipal_water',
+        'powerutility': 'power_utility',
+        'power-utility': 'power_utility',
+        'shieldmotor': 'shield_insurance',
+        'shield-motor': 'shield_insurance',
+    }
+    for alias, target in aliases.items():
+        if target in profiles and alias not in profiles:
+            aliased = dict(profiles[target])
+            aliased['slug'] = alias
+            profiles[alias] = aliased
+
     return profiles
 
 def determine_org_plan(passage: dict) -> dict:
     if settings.USE_CACHED_AI:
-        cache_path = os.path.join(os.path.dirname(__file__), '../../protocol/examples/example_plan.json')
-        if os.path.exists(cache_path):
-            with open(cache_path, 'r') as f:
-                return json.load(f)
-        return {"orgs": []}
+        desc = (passage.get("problem_description") or "").lower()
+        entities = str(passage.get("entities") or {}).lower()
+        combined = f"{desc} {entities}"
+
+        if any(w in combined for w in ["upi", "payeasy", "northfield", "ramesh", "debit"]):
+            return {
+                "orgs": [
+                    {
+                        "slug": "payeasy",
+                        "reason": "Payment app initiating transaction where debit occurred without credit.",
+                        "source": "rule_matched",
+                        "dispatch_order": 1,
+                        "dependencies": []
+                    },
+                    {
+                        "slug": "northfield_bank",
+                        "reason": "Remitter bank debited without merchant settlement. Dependent on PayEasy claim ref.",
+                        "source": "rule_matched",
+                        "dispatch_order": 2,
+                        "dependencies": [
+                            {"org": "payeasy", "need": "ticket_ref", "as": "tpap_incident_ref"}
+                        ]
+                    }
+                ]
+            }
+        elif any(w in combined for w in ["pipe", "burst", "water", "flood", "avenue", "utility", "car", "submerged"]):
+            return {
+                "orgs": [
+                    {
+                        "slug": "municipal_water",
+                        "reason": "Municipal water main burst reported in public street.",
+                        "source": "rule_matched",
+                        "dispatch_order": 1,
+                        "dependencies": []
+                    },
+                    {
+                        "slug": "power_utility",
+                        "reason": "Submerged electrical distribution boxes near flooding creating electrocution hazard.",
+                        "source": "rule_matched",
+                        "dispatch_order": 1,
+                        "dependencies": []
+                    },
+                    {
+                        "slug": "shield_insurance",
+                        "reason": "Comprehensive vehicle flood damage claim intimation; dependent on municipal leak docket.",
+                        "source": "rule_matched",
+                        "dispatch_order": 2,
+                        "dependencies": [
+                            {"org": "municipal_water", "need": "ticket_ref", "as": "third_party_incident_ref"}
+                        ]
+                    }
+                ]
+            }
+        else:
+            cache_path = os.path.join(os.path.dirname(__file__), '../../protocol/examples/example_plan.json')
+            if os.path.exists(cache_path):
+                with open(cache_path, 'r') as f:
+                    return json.load(f)
+            return {"orgs": []}
 
     profiles = load_org_profiles()
     matched_orgs = []

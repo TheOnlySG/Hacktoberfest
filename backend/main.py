@@ -15,10 +15,12 @@ app.add_middleware(
 async def health_check():
     return {"status": "ok"}
 
-from backend.api import passages, orgs, webhooks, sandbox, questions
+from backend.api import passages, orgs, webhooks, sandbox, questions, escalations
 
 app.include_router(passages.router, prefix="/api/passages", tags=["Passages"])
+app.include_router(passages.root_api_router, prefix="/api", tags=["Passages Core"])
 app.include_router(orgs.router, prefix="/api/orgs", tags=["Organizations"])
 app.include_router(webhooks.router, prefix="/api/webhooks", tags=["Webhooks"])
 app.include_router(questions.router, prefix="/api", tags=["Questions & Relay"])
+app.include_router(escalations.router, prefix="/api/escalations", tags=["Escalations"])
 app.include_router(sandbox.router, prefix="/sandbox", tags=["Sandbox Controls"])

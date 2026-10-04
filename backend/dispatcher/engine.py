@@ -80,4 +80,11 @@ def dispatch_drafts(passage_id: str, approved_drafts: list, org_plan: dict, rela
         # 5. Consent Record (Mocked)
         # In a real app, write to the consent records DB.
 
+    # Seed incoming counterparty questions for this passage
+    try:
+        from backend.dispatcher.relay import seed_questions_for_passage
+        seed_questions_for_passage(passage_id, created_tickets)
+    except Exception as e:
+        print(f"Failed to seed questions for passage {passage_id}: {e}")
+
     return created_tickets

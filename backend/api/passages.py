@@ -86,6 +86,20 @@ async def get_drafts(id: str):
         raise HTTPException(status_code=404, detail="Passage not found")
     return PASSAGES_DB[id].get("drafts") or []
 
+root_api_router = APIRouter()
+
+@root_api_router.patch("/drafts/{draft_id}")
+async def update_draft_root(draft_id: str, payload: Dict[str, Any]):
+    return {"draft_id": draft_id, "status": "updated", **payload}
+
+@root_api_router.post("/tickets/{ticket_id}/sync")
+async def sync_ticket_root(ticket_id: str):
+    return {"ticket_id": ticket_id, "status": "synced"}
+
+@router.get("")
+async def list_passages():
+    return list(PASSAGES_DB.values())
+
 @router.patch("/drafts/{draft_id}")
 async def update_draft(draft_id: str, payload: Dict[str, Any]):
     return {"draft_id": draft_id, "status": "updated", **payload}
@@ -97,9 +111,14 @@ async def dispatch_passage(id: str, payload: Dict[str, Any] = None):
     record = PASSAGES_DB[id]
     approved_drafts = payload.get("approved_drafts") if payload else None
     if not approved_drafts:
-        approved_drafts = record.get("drafts") or []
+        compiled = record.get("compiled") or {}
+        plan = record.get("plan") or determine_org_plan(compiled)
+        record["plan"] = plan
+        approved_drafts = record.get("drafts") or compose_drafts(compiled, plan)
+        record["drafts"] = approved_drafts
+
     relay_rules = payload.get("relay_rules") if payload else {}
-    plan = record.get("plan") or {}
+    plan = record.get("plan") or determine_org_plan(record.get("compiled") or {})
     tickets = dispatch_drafts(id, approved_drafts, plan, relay_rules)
     record["tickets"] = tickets
     record["status"] = "dispatched"
