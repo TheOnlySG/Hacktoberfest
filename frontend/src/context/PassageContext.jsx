@@ -93,6 +93,34 @@ export const PassageProvider = ({ children }) => {
     return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' IST';
   };
 
+  // Add file evidence
+  const addEvidence = (files) => {
+    if (!files || files.length === 0) return;
+    const newItems = Array.from(files).map((file, idx) => {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      const type = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)
+        ? 'photo'
+        : ['pdf', 'doc', 'docx', 'txt'].includes(ext)
+        ? 'invoice'
+        : 'chat';
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+      const sizeStr = sizeMb === '0.0' ? `${(file.size / 1024).toFixed(0)} KB` : `${sizeMb} MB`;
+      return {
+        id: `ev-uploaded-${Date.now()}-${idx}`,
+        name: file.name,
+        type: type,
+        size: sizeStr
+      };
+    });
+
+    setEvidenceList(prev => [...prev, ...newItems]);
+  };
+
+  // Remove file evidence
+  const removeEvidence = (evId) => {
+    setEvidenceList(prev => prev.filter(e => e.id !== evId));
+  };
+
   // Switch demo case
   const switchCase = (newKey) => {
     if (DEMO_CASES[newKey]) {
@@ -441,6 +469,8 @@ export const PassageProvider = ({ children }) => {
         organizations,
         drafts,
         evidenceList,
+        addEvidence,
+        removeEvidence,
         orgEvidenceSelection,
         toggleEvidenceForOrg,
         relayConsent,
