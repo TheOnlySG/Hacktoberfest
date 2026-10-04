@@ -24,7 +24,13 @@ def dispatch_drafts(passage_id: str, approved_drafts: list, org_plan: dict, rela
         org_slug = draft['org_slug']
         profile = profiles.get(org_slug)
         if not profile:
-            continue
+            profile = {
+                "slug": org_slug,
+                "name": org_slug.replace('_', ' ').title(),
+                "channels": [{"type": "sandbox_api"}],
+                "status_map": {"OPEN": "submitted", "RESOLVED": "resolved"},
+                "depends_on": []
+            }
             
         # 1. Dependency Injection
         # If this draft depends on another org's ticket ref, inject it.

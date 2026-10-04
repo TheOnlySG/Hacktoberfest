@@ -231,28 +231,50 @@ def compose_drafts(passage: dict, org_plan: dict) -> list:
         slug = org_info.get('slug')
         profile = profiles.get(slug)
         if not profile:
-            continue
-            
+            name = org_info.get('name') or slug.replace('_', ' ').title()
+            profile = {
+                "slug": slug,
+                "name": name,
+                "category": org_info.get('category', 'Counterparty Organization'),
+                "ticket_type": f"{slug}.resolution.v1",
+                "evidence_policy": {"allow": ["ev-1", "ev-2", "ev-3"]},
+                "status_map": {"OPEN": "submitted", "PROCESSING": "in_progress", "RESOLVED": "resolved"}
+            }
+            profiles[slug] = profile
+
         schema_path = os.path.join(os.path.dirname(__file__), '../../protocol', profile.get('schema', ''))
         schema_content = {}
-        if os.path.exists(schema_path):
+        if os.path.exists(schema_path) and profile.get('schema'):
             with open(schema_path, 'r') as f:
                 schema_content = json.load(f)
-                
-        allowed_evidence = profile.get('evidence_policy', {}).get('allow', [])
+        else:
+            schema_content = {
+                "title": f"{profile.get('name', slug.title())} Dispute Intake",
+                "type": "object",
+                "properties": {
+                    "Dispute Summary": {"type": "string"},
+                    "Claim Details": {"type": "string"},
+                    "Requested Remedy": {"type": "string"},
+                    "Reference Identifiers": {"type": "string"}
+                }
+            }
+
+        allowed_evidence = profile.get('evidence_policy', {}).get('allow', ["ev-1", "ev-2", "ev-3"])
         denied_evidence = profile.get('evidence_policy', {}).get('deny', [])
-        
+
         draft = {
             "draft_id": f"d-{uuid.uuid4().hex[:8]}",
             "org_slug": slug,
             "status": "draft",
-            "ticket_type": profile.get("ticket_type"),
+            "ticket_type": profile.get("ticket_type", f"{slug}.resolution.v1"),
             "fields": {},
             "evidence_selection": {},
             "field_sources": {}
         }
-        
-        if client and system_prompt and schema_content:
+
+        if client:
+            if not system_prompt:
+                system_prompt = "You are the Ticket Composer for {org_slug}. Generate a structured complaint ticket conforming to {ticket_schema} from this dispute: {passage_json}. Allowed evidence: {allowed_evidence}. Denied: {denied_evidence}. Output JSON."
             prompt = system_prompt.format(
                 org_slug=slug,
                 allowed_evidence=json.dumps(allowed_evidence),
@@ -260,7 +282,7 @@ def compose_drafts(passage: dict, org_plan: dict) -> list:
                 passage_json=json.dumps(passage),
                 ticket_schema=json.dumps(schema_content)
             )
-            
+
             model_to_use = getattr(settings, 'GROQ_MODEL', 'openai/gpt-oss-120b')
             try:
                 try:

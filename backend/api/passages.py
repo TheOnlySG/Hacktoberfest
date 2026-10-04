@@ -53,6 +53,7 @@ async def confirm_passage(id: str, payload: Dict[str, Any]):
     return {"status": "confirmed"}
 
 @router.post("/{id}/plan")
+@router.get("/{id}/plan")
 async def plan_passage(id: str):
     if id not in PASSAGES_DB:
         raise HTTPException(status_code=404, detail="Passage not found")

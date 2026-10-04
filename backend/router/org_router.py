@@ -3,10 +3,13 @@ import json
 from groq import Groq
 from backend.config import settings
 
+DYNAMIC_PROFILES = {}
+
 def load_org_profiles():
     orgs_dir = os.path.join(os.path.dirname(__file__), '../../protocol/orgs')
     profiles = {}
     if not os.path.exists(orgs_dir):
+        profiles.update(DYNAMIC_PROFILES)
         return profiles
     for filename in os.listdir(orgs_dir):
         if filename.endswith('.json'):
@@ -32,6 +35,8 @@ def load_org_profiles():
             aliased['slug'] = alias
             profiles[alias] = aliased
 
+    # Include any dynamically discovered organization profiles
+    profiles.update(DYNAMIC_PROFILES)
     return profiles
 
 def determine_org_plan(passage: dict) -> dict:
@@ -173,16 +178,98 @@ def determine_org_plan(passage: dict) -> dict:
             
             result = json.loads(response.choices[0].message.content)
             for suggestion in result.get('suggested_orgs', []):
-                slug = suggestion.get('slug')
-                if slug in profiles and slug not in matched_slugs:
+                slug = (suggestion.get('slug') or '').lower().replace(' ', '_').replace('-', '_')
+                if not slug:
+                    continue
+                name = suggestion.get('name') or slug.replace('_', ' ').title()
+                category = suggestion.get('category') or 'Counterparty Entity'
+                reason = suggestion.get('reason') or f"Identified as party responsible for resolving {slug.replace('_', ' ')}."
+
+                if slug not in profiles:
+                    # Dynamically synthesize an Org Profile on the fly
+                    profiles[slug] = {
+                        "slug": slug,
+                        "name": name,
+                        "category": category,
+                        "domain": suggestion.get('domain', 'consumer_affairs'),
+                        "channels": [{"type": "sandbox_api", "priority": 1}],
+                        "ticket_type": f"{slug}.resolution_intake.v1",
+                        "sla": "24h Response • 72h Resolution",
+                        "status_map": {"OPEN": "submitted", "IN_PROGRESS": "in_progress", "RESOLVED": "resolved"},
+                        "requires": ["Problem Description", "Identifier Reference", "Evidence Documents"],
+                        "withholds": ["Full payment account details", "Third-party confidential logs"],
+                        "allowedEvidence": ["ev-1", "ev-2", "ev-3", "ev-4"],
+                        "depends_on": []
+                    }
+
+                if slug not in [m['slug'] for m in matched_orgs]:
+                    prof = profiles[slug]
                     matched_orgs.append({
                         "slug": slug,
-                        "reason": suggestion.get('reason'),
+                        "name": prof.get('name', name),
+                        "category": prof.get('category', category),
+                        "reason": reason,
                         "source": "ai_suggested",
-                        "dependencies": profiles[slug].get("depends_on", [])
+                        "dependencies": prof.get("depends_on", [])
                     })
         except Exception as e:
             print(f"LLM routing failed: {e}")
+
+    # Fallback: If no organizations matched, synthesize from passage entities
+    if not matched_orgs:
+        entities = passage.get('entities') or {}
+        primary_entity = entities.get('merchant') or entities.get('company') or entities.get('courier') or entities.get('bank') or entities.get('counterparty')
+        if not primary_entity:
+            # Try to grab first entity key/value
+            for k, v in entities.items():
+                if isinstance(v, str) and len(v) > 2 and not v.startswith(('http', '₹', '$')):
+                    primary_entity = v
+                    break
+        if not primary_entity:
+            primary_entity = "Primary Service Provider"
+
+        slug1 = primary_entity.lower().replace(' ', '_').replace('-', '_')[:24]
+        profiles[slug1] = {
+            "slug": slug1,
+            "name": primary_entity,
+            "category": "Primary Counterparty",
+            "domain": "service_provider",
+            "channels": [{"type": "sandbox_api", "priority": 1}],
+            "ticket_type": f"{slug1}.intake.v1",
+            "sla": "24h Response • 72h Resolution",
+            "status_map": {"OPEN": "submitted", "PROCESSING": "in_progress", "RESOLVED": "resolved"},
+            "depends_on": []
+        }
+        matched_orgs.append({
+            "slug": slug1,
+            "name": primary_entity,
+            "category": "Primary Counterparty",
+            "reason": f"Direct contracting counterparty identified in dispute dossier.",
+            "source": "entity_extracted",
+            "dependencies": []
+        })
+
+        # Add consumer protection / regulatory counterweight
+        reg_slug = "consumer_protection_desk"
+        profiles[reg_slug] = {
+            "slug": reg_slug,
+            "name": "Consumer Protection Desk",
+            "category": "Oversight / Regulatory Authority",
+            "domain": "statutory_ombudsman",
+            "channels": [{"type": "sandbox_api", "priority": 1}],
+            "ticket_type": "regulatory.notice.v1",
+            "sla": "48h Regulatory TAT",
+            "status_map": {"OPEN": "submitted", "IN_PROGRESS": "in_progress", "RESOLVED": "resolved"},
+            "depends_on": [{"org": slug1, "need": "ticket_ref", "as": "counterparty_reference"}]
+        }
+        matched_orgs.append({
+            "slug": reg_slug,
+            "name": "Consumer Protection Desk",
+            "category": "Oversight / Regulatory Authority",
+            "reason": "Regulatory safety net monitoring statutory TAT compliance.",
+            "source": "statutory_safety_net",
+            "dependencies": [{"org": slug1, "need": "ticket_ref", "as": "counterparty_reference"}]
+        })
 
     # 3. Dependency resolution (simple topological sort for dispatch order)
     # For now, we'll assign a simple incremental order.

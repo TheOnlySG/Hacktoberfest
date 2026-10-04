@@ -14,7 +14,8 @@ export default function Header() {
     pendingQuestion,
     organizations,
     backendConnected,
-    isEscalated
+    isEscalated,
+    startNewDispute
   } = usePassage();
 
   return (
@@ -34,7 +35,17 @@ export default function Header() {
           </div>
 
           {/* Center: Case Switcher */}
-          <div className="hidden md:flex items-center bg-[#f2ede4] p-1 rounded-full border border-[#ddd5c7]">
+          <div className="hidden md:flex items-center bg-[#f2ede4] p-1 rounded-full border border-[#ddd5c7] gap-1">
+            <button
+              onClick={() => startNewDispute()}
+              className={`px-3 py-1 text-xs font-label-sm uppercase tracking-wider rounded-full transition-all flex items-center gap-1 ${
+                caseKey === 'custom'
+                  ? 'bg-[#d9381e] text-white shadow-sm font-semibold'
+                  : 'text-[#d9381e] hover:bg-[#ffdad3]/50 font-semibold'
+              }`}
+            >
+              <span>+ Custom Query</span>
+            </button>
             {Object.keys(DEMO_CASES).map(key => {
               const c = DEMO_CASES[key];
               const isSelected = caseKey === key;
@@ -59,7 +70,7 @@ export default function Header() {
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f8f3ea] border border-[#ddd5c7]">
               <span className={`w-1.5 h-1.5 rounded-full ${backendConnected ? 'bg-emerald-500 animate-pulse' : 'bg-[#cbd6c6]'}`}></span>
               <span className="font-label-sm text-[10px] uppercase tracking-wider text-[#67625a]">
-                {backendConnected ? 'FastAPI :8000 Live' : 'Gemma 4 • Local Mode'}
+                {backendConnected ? 'FastAPI Live' : 'Groq AI • Ready'}
               </span>
             </div>
 

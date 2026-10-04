@@ -4,7 +4,9 @@ import { usePassage } from '../context/PassageContext';
 export default function TrackerScreen() {
   const {
     activeCase,
+    narrative,
     organizations,
+    evidenceList,
     timelineEvents,
     pendingQuestion,
     isEscalated,
@@ -14,6 +16,10 @@ export default function TrackerScreen() {
   } = usePassage();
 
   const [copiedHash, setCopiedHash] = useState(null);
+
+  const photoExhibit = evidenceList?.find(e => e.type === 'photo' && e.url) || evidenceList?.find(e => e.url) || null;
+  const docExhibit = evidenceList?.find(e => e.type === 'invoice' || e.type === 'document' || e.type === 'sms') || evidenceList?.[0] || null;
+  const primaryOrg = organizations?.[0] || { name: 'Counterparty Authority' };
 
   const handleShare = () => {
     if (navigator.share) {
@@ -50,7 +56,7 @@ export default function TrackerScreen() {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="font-headline-lg-mobile sm:font-headline-lg text-2xl sm:text-4xl text-[#1d1c16] tracking-tight leading-tight">
-            {activeCase.title.split(':')[1] || activeCase.title}.
+            {activeCase.title.includes(':') ? activeCase.title.split(':')[1] : activeCase.title}.
           </h1>
           <p className="font-body-md text-sm sm:text-base text-[#414846] mt-1.5 leading-relaxed">
             {isEscalated 
@@ -76,23 +82,35 @@ export default function TrackerScreen() {
         </div>
       </div>
 
-      {/* Dossier Exhibit Card from screen_3_timeline */}
+      {/* Dossier Exhibit Card */}
       <section className="bg-white rounded-[20px] border border-[#ddd5c7] p-5 sm:p-6 shadow-sm mb-6 overflow-hidden">
         <div className="flex flex-col gap-3">
-          <div className="w-full aspect-[16/10] sm:aspect-[16/9] rounded-[14px] overflow-hidden bg-[#ece8df] relative border border-[#ddd5c7]">
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFLmMrvreelpdxJDgUp7jEMwsheLQ-UuUCuol5tdMt8nVE0cl3rIAMv_OctWYVyHxD7WwxcG70MhD8tJr5JSk5OAmVHxnDfaQwuuoVB6F6O8LfiEAf1yWYf9DtvSkMYHGQo2XgJez7MChht_pnLO_Iu80TsJKYbQBRx7cn8UcJawcoP8NjTG4uM074_KjCt7lDl5uBZ3MfhipwiG_KdgWH4lYQoa7LVmSbRwlDwdVy_XJt5PbteXPM"
-              alt="Parcel condition exhibit"
-              className="w-full h-full object-cover"
-            />
-          </div>
+          {photoExhibit?.url ? (
+            <div className="w-full aspect-[16/10] sm:aspect-[16/9] rounded-[14px] overflow-hidden bg-[#ece8df] relative border border-[#ddd5c7]">
+              <img
+                src={photoExhibit.url}
+                alt={photoExhibit.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : docExhibit ? (
+            <div className="w-full py-8 px-6 rounded-[14px] bg-[#f8f3ea] border border-[#ddd5c7] flex flex-col items-center justify-center text-center gap-2">
+              <span className="text-3xl">📄</span>
+              <span className="font-body-md text-sm font-semibold text-[#1d1c16]">{docExhibit.name}</span>
+              <span className="font-label-sm text-xs text-[#414846]">{docExhibit.preview || 'Substantiation Document Attached'}</span>
+            </div>
+          ) : (
+            <div className="w-full py-8 rounded-[14px] bg-[#ece8df] flex items-center justify-center text-[#414846] text-sm">
+              No photographic exhibits uploaded.
+            </div>
+          )}
 
           <div className="flex items-center justify-between pt-1 text-xs">
-            <span className="font-label-sm text-xs uppercase tracking-wider text-[#1d1c16] font-semibold">
-              EXHIBIT A-01: box-photo.jpg
+            <span className="font-label-sm text-xs uppercase tracking-wider text-[#1d1c16] font-semibold truncate">
+              EXHIBIT: {photoExhibit ? photoExhibit.name : docExhibit ? docExhibit.name : 'Dossier Core'}
             </span>
-            <span className="font-label-sm text-[11px] text-[#414846]/80">
-              3.4 MB • GEOLOC VERIFIED
+            <span className="font-label-sm text-[11px] text-[#414846]/80 shrink-0">
+              {photoExhibit ? photoExhibit.size : docExhibit ? docExhibit.size : 'Verified'} • PROVENANCE SEALED
             </span>
           </div>
 
@@ -104,15 +122,15 @@ export default function TrackerScreen() {
                   RESOLUTION ASSIGNED
                 </span>
                 <span className="font-body-sm text-xs sm:text-sm text-[#1d1c16] font-medium mt-0.5">
-                  Full transit indemnity & replacement claimed
+                  Coordinated multi-party claim & audit dispatched
                 </span>
               </div>
               <div className="text-right flex flex-col">
                 <span className="font-label-sm text-[10px] uppercase text-[#414846] tracking-wider font-semibold">
-                  PRIMARY CARRIER
+                  PRIMARY COUNTERPARTY
                 </span>
                 <span className="font-body-sm text-xs sm:text-sm text-[#1d1c16] font-medium mt-0.5">
-                  SwiftRoute Logistics
+                  {primaryOrg.name}
                 </span>
               </div>
             </div>

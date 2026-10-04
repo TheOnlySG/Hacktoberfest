@@ -4,19 +4,48 @@ import * as api from '../services/api';
 
 const PassageContext = createContext(null);
 
+const CUSTOM_TEMPLATE = {
+  id: "custom",
+  title: "Custom Dispute Intake",
+  domain: "Direct Dispute Resolution",
+  docketSerial: "PASS-2026-CUSTOM",
+  user: {
+    name: "Complainant",
+    email: "user@passage.local",
+    phone: "+91 98200 00000",
+    address: "India"
+  },
+  narrative: "",
+  rawAmount: "Open Claim",
+  evidenceList: [],
+  organizations: [],
+  drafts: {},
+  initialEvents: [
+    {
+      id: "evt-c-0",
+      timestamp: "Today • Just now",
+      type: "docket_created",
+      title: "Intake Dossier Opened",
+      desc: "Ready for custom query entry, receipt/image upload, and Groq-powered multi-organization routing.",
+      hash: "8f4a19b3c4e098df2411aa784bcf65103a890123ef65a4bc0192348574109abc",
+      author: "Passage Groq Engine"
+    }
+  ]
+};
+
 export const PassageProvider = ({ children }) => {
   const [caseKey, setCaseKey] = useState('case1');
   const [currentScreen, setCurrentScreen] = useState('start'); // 'start' | 'plan' | 'drafts' | 'tracker' | 'inbox' | 'escalation' | 'resolved'
   const [activeRole, setActiveRole] = useState('user'); // 'user' | org slug
 
   // Current case base config
-  const activeCase = DEMO_CASES[caseKey];
+  const activeCase = DEMO_CASES[caseKey] || CUSTOM_TEMPLATE;
 
   // Dynamic state
-  const [narrative, setNarrative] = useState(activeCase.narrative);
-  const [organizations, setOrganizations] = useState(activeCase.organizations);
-  const [drafts, setDrafts] = useState(activeCase.drafts);
-  const [evidenceList, setEvidenceList] = useState(activeCase.evidenceList);
+  const [narrative, setNarrative] = useState(activeCase.narrative || "");
+  const [organizations, setOrganizations] = useState(activeCase.organizations || []);
+  const [drafts, setDrafts] = useState(activeCase.drafts || {});
+  const [evidenceList, setEvidenceList] = useState(activeCase.evidenceList || []);
   
   // Backend integration state
   const [backendConnected, setBackendConnected] = useState(false);
@@ -26,15 +55,15 @@ export const PassageProvider = ({ children }) => {
   // Disclosure toggles: orgSlug -> [evId, ...]
   const [orgEvidenceSelection, setOrgEvidenceSelection] = useState(() => {
     const initial = {};
-    activeCase.organizations.forEach(org => {
+    (activeCase.organizations || []).forEach(org => {
       initial[org.slug] = [...(org.allowedEvidence || [])];
     });
     return initial;
   });
 
   const [relayConsent, setRelayConsent] = useState(true);
-  const [timelineEvents, setTimelineEvents] = useState(activeCase.initialEvents);
-  const [pendingQuestion, setPendingQuestion] = useState(activeCase.question);
+  const [timelineEvents, setTimelineEvents] = useState(activeCase.initialEvents || []);
+  const [pendingQuestion, setPendingQuestion] = useState(activeCase.question || null);
   const [answeredQuestions, setAnsweredQuestions] = useState([]);
   const [isEscalated, setIsEscalated] = useState(false);
   const [isResolved, setIsResolved] = useState(false);
@@ -55,20 +84,20 @@ export const PassageProvider = ({ children }) => {
 
   // Sync state whenever caseKey changes
   useEffect(() => {
-    const c = DEMO_CASES[caseKey];
-    setNarrative(c.narrative);
-    setOrganizations(c.organizations);
-    setDrafts(c.drafts);
-    setEvidenceList(c.evidenceList);
+    const c = DEMO_CASES[caseKey] || CUSTOM_TEMPLATE;
+    setNarrative(c.narrative || "");
+    setOrganizations(c.organizations || []);
+    setDrafts(c.drafts || {});
+    setEvidenceList(c.evidenceList || []);
     
     const initial = {};
-    c.organizations.forEach(org => {
+    (c.organizations || []).forEach(org => {
       initial[org.slug] = [...(org.allowedEvidence || [])];
     });
     setOrgEvidenceSelection(initial);
 
-    setTimelineEvents(c.initialEvents);
-    setPendingQuestion(c.question);
+    setTimelineEvents(c.initialEvents || []);
+    setPendingQuestion(c.question || null);
     setAnsweredQuestions([]);
     setIsEscalated(false);
     setIsResolved(false);
@@ -93,42 +122,87 @@ export const PassageProvider = ({ children }) => {
     return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' IST';
   };
 
-  // Add file evidence
+  // Add file evidence with object URLs for instant visual preview
   const addEvidence = (files) => {
     if (!files || files.length === 0) return;
     const newItems = Array.from(files).map((file, idx) => {
       const ext = file.name.split('.').pop()?.toLowerCase() || '';
-      const type = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)
-        ? 'photo'
-        : ['pdf', 'doc', 'docx', 'txt'].includes(ext)
-        ? 'invoice'
-        : 'chat';
+      const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext);
+      const isInvoice = ['pdf', 'doc', 'docx', 'txt', 'csv'].includes(ext);
+      const type = isImg ? 'photo' : isInvoice ? 'invoice' : 'chat';
       const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
       const sizeStr = sizeMb === '0.0' ? `${(file.size / 1024).toFixed(0)} KB` : `${sizeMb} MB`;
+      const blobUrl = isImg ? URL.createObjectURL(file) : null;
       return {
         id: `ev-uploaded-${Date.now()}-${idx}`,
         name: file.name,
         type: type,
-        size: sizeStr
+        size: sizeStr,
+        url: blobUrl,
+        tag: isImg ? 'Photographic Proof' : 'Financial / Order Doc',
+        preview: `${file.name} • ${sizeStr} • Verified locally`
       };
     });
 
     setEvidenceList(prev => [...prev, ...newItems]);
+
+    // Also include in active organization permissions
+    setOrgEvidenceSelection(prev => {
+      const updated = { ...prev };
+      const newIds = newItems.map(i => i.id);
+      Object.keys(updated).forEach(slug => {
+        updated[slug] = Array.from(new Set([...(updated[slug] || []), ...newIds]));
+      });
+      return updated;
+    });
   };
 
   // Remove file evidence
   const removeEvidence = (evId) => {
     setEvidenceList(prev => prev.filter(e => e.id !== evId));
+    setOrgEvidenceSelection(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(slug => {
+        updated[slug] = (updated[slug] || []).filter(id => id !== evId);
+      });
+      return updated;
+    });
   };
 
-  // Switch demo case
+  // Clear and start a fresh custom dispute
+  const startNewDispute = () => {
+    setCaseKey('custom');
+    setNarrative('');
+    setEvidenceList([]);
+    setOrganizations([]);
+    setDrafts({});
+    setOrgEvidenceSelection({});
+    setTimelineEvents([
+      {
+        id: `evt-init-${Date.now()}`,
+        timestamp: `Today • ${getTimeString()}`,
+        type: "docket_created",
+        title: "New Intake Dossier Opened",
+        desc: "Ready for user dispute narrative and evidentiary uploads.",
+        hash: generateHash(),
+        author: "Passage Groq Engine"
+      }
+    ]);
+    setBackendPassageId(null);
+    setBackendCompiled(null);
+    setIsEscalated(false);
+    setIsResolved(false);
+    setCurrentScreen('start');
+  };
+
+  // Switch demo case template
   const switchCase = (newKey) => {
     if (DEMO_CASES[newKey]) {
       setCaseKey(newKey);
     }
   };
 
-  // Compile narrative into structured Passage (with real FastAPI integration!)
+  // Compile narrative into structured Passage (with real Groq AI backend!)
   const compilePassage = async () => {
     setIsCompiling(true);
     let passageId = backendPassageId;
@@ -140,16 +214,43 @@ export const PassageProvider = ({ children }) => {
         passageId = created.id;
         setBackendPassageId(passageId);
 
-        // 2. Trigger Case Compiler on backend
+        // 2. Trigger Case Compiler on backend (Groq AI)
         const compiled = await api.compilePassage(passageId);
         if (compiled) {
           setBackendCompiled(compiled);
         }
 
-        // 3. Trigger Org Router on backend
+        // 3. Trigger Org Router on backend (Groq AI)
         const plan = await api.getPlan(passageId);
         if (plan?.orgs?.length) {
           console.log('[Passage API] Router Plan received from backend:', plan);
+          const dynamicOrgs = plan.orgs.map((o, idx) => {
+            const orgName = o.name || o.slug.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            return {
+              slug: o.slug,
+              name: orgName,
+              category: o.category || (idx === 0 ? 'Primary Counterparty' : 'Oversight / Regulatory Authority'),
+              role: idx === 0 ? 'primary' : 'oversight',
+              domain: o.domain || 'general',
+              ticketType: `${o.slug}.resolution.v1`,
+              status: 'acknowledged',
+              ticketRef: `${o.slug.slice(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`,
+              channel: 'Direct Dispatch (REST & Webhook)',
+              sla: '24h Response • 72h Resolution',
+              rationale: o.reason || 'Party identified by Groq Org Router as responsible for resolution.',
+              requires: ['Dispute Narrative', 'Reference Identifiers', 'Attached Exhibits'],
+              withholds: ['Unconsented banking credentials', 'Third-party private logs'],
+              allowedEvidence: evidenceList.map(e => e.id)
+            };
+          });
+
+          setOrganizations(dynamicOrgs);
+
+          const newEvSelection = {};
+          dynamicOrgs.forEach(org => {
+            newEvSelection[org.slug] = evidenceList.map(e => e.id);
+          });
+          setOrgEvidenceSelection(newEvSelection);
         }
       }
     } catch (err) {
@@ -164,10 +265,10 @@ export const PassageProvider = ({ children }) => {
           id: `evt-${Date.now()}`,
           timestamp: `Today • ${getTimeString()}`,
           type: "compiled",
-          title: "AI Compilation Completed (Local Gemma 4 / Backend API)",
-          desc: "Extracted entities, verified timeline, and mapped multi-party routing plan.",
+          title: "AI Compilation Completed (Groq AI / Backend API)",
+          desc: `Extracted entities and mapped dynamic resolution plan for ${organizations.length || 2} counterparties.`,
           hash: generateHash(),
-          author: "Passage Compiler (FastAPI :8000)"
+          author: "Passage Compiler (Groq API)"
         }
       ]);
       setCurrentScreen('plan');
@@ -185,13 +286,24 @@ export const PassageProvider = ({ children }) => {
     });
   };
 
-  // Move from Plan to Drafts review (fetch drafts from backend)
+  // Move from Plan to Drafts review (fetch drafts from Groq backend)
   const proceedToDrafts = async () => {
     if (backendPassageId) {
       try {
         const backendDrafts = await api.getDrafts(backendPassageId);
         if (backendDrafts && backendDrafts.length > 0) {
           console.log('[Passage API] Ticket drafts loaded from backend:', backendDrafts);
+          const draftsMap = {};
+          backendDrafts.forEach(d => {
+            draftsMap[d.org_slug] = {
+              draftId: d.draft_id,
+              title: `${(d.org_slug || '').replace('_', ' ').toUpperCase()} Resolution Ticket`,
+              fields: d.fields || {},
+              evidenceIncluded: Object.keys(d.evidence_selection || {}).filter(k => d.evidence_selection[k]),
+              delegationStatement: `Passage is authorized by user to initiate this petition with ${d.org_slug.replace('_', ' ')}.`
+            };
+          });
+          setDrafts(prev => ({ ...prev, ...draftsMap }));
         }
       } catch (e) {
         console.warn('[Passage API] getDrafts fallback:', e);
@@ -516,7 +628,8 @@ export const PassageProvider = ({ children }) => {
         triggerEscalation,
         authorizeEscalationFiling,
         simulateNextStep,
-        updateSandboxStatus
+        updateSandboxStatus,
+        startNewDispute
       }}
     >
       {children}

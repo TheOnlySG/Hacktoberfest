@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePassage } from '../context/PassageContext';
 
 export default function DraftsScreen() {
   const {
     activeCase,
+    narrative,
     organizations,
     drafts,
     evidenceList,
+    orgEvidenceSelection,
+    toggleEvidenceForOrg,
     relayConsent,
     setRelayConsent,
     approveAndDispatch,
@@ -16,113 +19,62 @@ export default function DraftsScreen() {
   // Selected recipient organization
   const [selectedOrgSlug, setSelectedOrgSlug] = useState(organizations[0]?.slug || 'swiftroute');
 
-  // Granular permissions per organization
-  const [permissions, setPermissions] = useState({
-    swiftroute: {
-      problemSummary: true,
-      orderDetails: true,
-      invoice: false, // Redacted for courier!
-      boxPhoto: true,
-      innerPhotos: true,
-      deliveryTimestamp: true,
-      phoneNumber: true,
-      paymentDetails: false // Redacted for courier!
-    },
-    shopmart: {
-      problemSummary: true,
-      orderDetails: true,
-      invoice: true,
-      boxPhoto: true,
-      innerPhotos: true,
-      deliveryTimestamp: true,
-      phoneNumber: true,
-      paymentDetails: true
-    },
-    cardissuer: {
-      problemSummary: true,
-      orderDetails: true,
-      invoice: true,
-      boxPhoto: false,
-      innerPhotos: false,
-      deliveryTimestamp: true,
-      phoneNumber: true,
-      paymentDetails: true
-    },
-    payeasy: {
-      problemSummary: true,
-      orderDetails: true,
-      invoice: false,
-      boxPhoto: false,
-      innerPhotos: false,
-      deliveryTimestamp: true,
-      phoneNumber: true,
-      paymentDetails: true
-    },
-    northfield: {
-      problemSummary: true,
-      orderDetails: true,
-      invoice: true,
-      boxPhoto: false,
-      innerPhotos: false,
-      deliveryTimestamp: true,
-      phoneNumber: true,
-      paymentDetails: true
-    },
-    open311: {
-      problemSummary: true,
-      orderDetails: false,
-      invoice: false,
-      boxPhoto: true,
-      innerPhotos: true,
-      deliveryTimestamp: true,
-      phoneNumber: true,
-      paymentDetails: false
-    },
-    powerutility: {
-      problemSummary: true,
-      orderDetails: false,
-      invoice: false,
-      boxPhoto: true,
-      innerPhotos: false,
-      deliveryTimestamp: true,
-      phoneNumber: true,
-      paymentDetails: false
-    },
-    shieldmotor: {
-      problemSummary: true,
-      orderDetails: true,
-      invoice: true,
-      boxPhoto: true,
-      innerPhotos: true,
-      deliveryTimestamp: true,
-      phoneNumber: true,
-      paymentDetails: true
+  // Keep selectedOrgSlug synchronized if organizations change
+  useEffect(() => {
+    if (organizations && organizations.length > 0) {
+      if (!organizations.some(o => o.slug === selectedOrgSlug)) {
+        setSelectedOrgSlug(organizations[0].slug);
+      }
     }
-  });
+  }, [organizations, selectedOrgSlug]);
 
-  const selectedOrg = organizations.find(o => o.slug === selectedOrgSlug) || organizations[0];
-  const orgPerms = permissions[selectedOrg.slug] || {
+  const selectedOrg = organizations.find(o => o.slug === selectedOrgSlug) || organizations[0] || {
+    slug: 'general',
+    name: 'Counterparty Organization',
+    category: 'Support & Resolution',
+    ticketType: 'General Ingestion Manifest',
+    ticketRef: 'DOCK-101',
+    channel: 'Direct REST API & Webhook'
+  };
+
+  // Granular fact-level permissions per organization
+  const [permissions, setPermissions] = useState({
     problemSummary: true,
     orderDetails: true,
-    invoice: false,
-    boxPhoto: true,
-    innerPhotos: true,
+    invoice: true,
     deliveryTimestamp: true,
     phoneNumber: true,
     paymentDetails: false
-  };
+  });
 
   const handleToggle = (key, val) => {
     setPermissions(prev => ({
       ...prev,
-      [selectedOrg.slug]: {
-        ...(prev[selectedOrg.slug] || orgPerms),
-        [key]: val
-      }
+      [key]: val
     }));
   };
 
   const activeDraft = drafts[selectedOrg.slug] || drafts[Object.keys(drafts)[0]];
+
+  // Dynamic evidence selection for the currently selected org
+  const selectedOrgAllowedEvidence = orgEvidenceSelection[selectedOrg.slug] || evidenceList.map(e => e.id);
+  const enclosedExhibits = evidenceList.filter(ev => selectedOrgAllowedEvidence.includes(ev.id));
+
+  // Count total active disclosures (data fields + active exhibits)
+  const activeFieldsCount = Object.values(permissions).filter(Boolean).length;
+  const totalEnclosedCount = activeFieldsCount + enclosedExhibits.length;
+  const totalItemsCount = Object.keys(permissions).length + evidenceList.length;
+
+  // Formulate tailored brief text for this recipient
+  const getBriefText = () => {
+    if (activeDraft?.fields?.problem_summary) return activeDraft.fields.problem_summary;
+    if (activeDraft?.fields?.description) return activeDraft.fields.description;
+    if (activeDraft?.fields?.statement) return activeDraft.fields.statement;
+    if (activeDraft?.title && narrative) return `${activeDraft.title}: ${narrative}`;
+    if (narrative) return narrative;
+    if (activeCase?.narrative) return activeCase.narrative;
+    return `Dispute docket prepared for ${selectedOrg.name}. Ingestion verification complete.`;
+  };
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -144,12 +96,12 @@ export default function DraftsScreen() {
       {/* Recipient Selector / Input */}
       <section className="flex flex-col gap-1.5 mb-6">
         <label className="font-label-sm text-xs uppercase tracking-widest text-[#414846] font-medium" htmlFor="recipient-select">
-          01 // ORGANIZATION OR PERSON
+          01 // RECIPIENT ENTITY
         </label>
         <div className="relative w-full">
           <select
             id="recipient-select"
-            value={selectedOrgSlug}
+            value={selectedOrg.slug}
             onChange={(e) => setSelectedOrgSlug(e.target.value)}
             className="w-full bg-white text-[#1d1c16] font-body-md text-base px-4 py-3.5 rounded-[14px] shadow-sm border border-[#ddd5c7] focus:outline-none focus:bg-[#f8f3ea] transition-colors appearance-none cursor-pointer font-medium"
           >
@@ -169,10 +121,10 @@ export default function DraftsScreen() {
       <section className="flex flex-col mb-8">
         <div className="flex items-baseline justify-between mb-2">
           <span className="font-label-sm text-xs uppercase tracking-widest text-[#414846] font-medium">
-            02 // WHAT THEY CAN SEE · PERMISSIONS ENCLOSED
+            02 // WHAT THEY CAN SEE · PERMISSIONS & EXHIBITS ENCLOSED
           </span>
           <span className="font-label-sm text-[11px] text-[#0f2b25] bg-[#cbd6c6]/50 px-2 py-0.5 rounded font-semibold uppercase">
-            {Object.values(orgPerms).filter(Boolean).length} of 8 Enclosed
+            {totalEnclosedCount} of {totalItemsCount} Enclosed
           </span>
         </div>
 
@@ -182,14 +134,14 @@ export default function DraftsScreen() {
           <div className="flex items-center justify-between py-2.5 px-3 hover:bg-[#f8f3ea]/50 transition-colors rounded-lg">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[#48645c] text-[20px]">description</span>
-              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Problem summary</span>
+              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Dispute statement & summary</span>
             </div>
             <div className="flex bg-[#f2ede4] rounded-full p-0.5 shrink-0" role="group">
               <button
                 type="button"
                 onClick={() => handleToggle('problemSummary', true)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  orgPerms.problemSummary
+                  permissions.problemSummary
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -200,7 +152,7 @@ export default function DraftsScreen() {
                 type="button"
                 onClick={() => handleToggle('problemSummary', false)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  !orgPerms.problemSummary
+                  !permissions.problemSummary
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -210,18 +162,18 @@ export default function DraftsScreen() {
             </div>
           </div>
 
-          {/* Toggle 2: Order details */}
+          {/* Toggle 2: Order / Reference details */}
           <div className="flex items-center justify-between py-2.5 px-3 hover:bg-[#f8f3ea]/50 transition-colors rounded-lg">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[#48645c] text-[20px]">inventory_2</span>
-              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Order details</span>
+              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Order, PNR & Reference details</span>
             </div>
             <div className="flex bg-[#f2ede4] rounded-full p-0.5 shrink-0" role="group">
               <button
                 type="button"
                 onClick={() => handleToggle('orderDetails', true)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  orgPerms.orderDetails
+                  permissions.orderDetails
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -232,7 +184,7 @@ export default function DraftsScreen() {
                 type="button"
                 onClick={() => handleToggle('orderDetails', false)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  !orgPerms.orderDetails
+                  !permissions.orderDetails
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -242,124 +194,18 @@ export default function DraftsScreen() {
             </div>
           </div>
 
-          {/* Toggle 3: Invoice */}
-          <div className="flex items-center justify-between py-2.5 px-3 hover:bg-[#f8f3ea]/50 transition-colors rounded-lg">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#48645c] text-[20px]">receipt_long</span>
-              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Invoice & Price</span>
-            </div>
-            <div className="flex bg-[#f2ede4] rounded-full p-0.5 shrink-0" role="group">
-              <button
-                type="button"
-                onClick={() => handleToggle('invoice', true)}
-                className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  orgPerms.invoice
-                    ? 'bg-[#001511] text-white font-medium shadow-xs'
-                    : 'text-[#414846]/70 hover:text-[#1d1c16]'
-                }`}
-              >
-                On
-              </button>
-              <button
-                type="button"
-                onClick={() => handleToggle('invoice', false)}
-                className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  !orgPerms.invoice
-                    ? 'bg-[#001511] text-white font-medium shadow-xs'
-                    : 'text-[#414846]/70 hover:text-[#1d1c16]'
-                }`}
-              >
-                Off
-              </button>
-            </div>
-          </div>
-
-          {/* Toggle 4: Box photo */}
-          <div className="flex items-center justify-between py-2.5 px-3 hover:bg-[#f8f3ea]/50 transition-colors rounded-lg">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#48645c] text-[20px]">photo_camera</span>
-              <div className="flex items-center gap-2">
-                <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Box exterior photo</span>
-                <span className="font-label-sm text-[10px] text-[#b51d04] bg-[#ffdad6]/60 px-1.5 py-0.2 rounded font-semibold">
-                  1 Attached
-                </span>
-              </div>
-            </div>
-            <div className="flex bg-[#f2ede4] rounded-full p-0.5 shrink-0" role="group">
-              <button
-                type="button"
-                onClick={() => handleToggle('boxPhoto', true)}
-                className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  orgPerms.boxPhoto
-                    ? 'bg-[#001511] text-white font-medium shadow-xs'
-                    : 'text-[#414846]/70 hover:text-[#1d1c16]'
-                }`}
-              >
-                On
-              </button>
-              <button
-                type="button"
-                onClick={() => handleToggle('boxPhoto', false)}
-                className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  !orgPerms.boxPhoto
-                    ? 'bg-[#001511] text-white font-medium shadow-xs'
-                    : 'text-[#414846]/70 hover:text-[#1d1c16]'
-                }`}
-              >
-                Off
-              </button>
-            </div>
-          </div>
-
-          {/* Toggle 5: Inner damaged items */}
-          <div className="flex items-center justify-between py-2.5 px-3 hover:bg-[#f8f3ea]/50 transition-colors rounded-lg">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#48645c] text-[20px]">broken_image</span>
-              <div className="flex items-center gap-2">
-                <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Inner damaged goods photos</span>
-                <span className="font-label-sm text-[10px] text-[#48645c] bg-[#cbd6c6]/50 px-1.5 py-0.2 rounded font-semibold">
-                  Exhibit 02
-                </span>
-              </div>
-            </div>
-            <div className="flex bg-[#f2ede4] rounded-full p-0.5 shrink-0" role="group">
-              <button
-                type="button"
-                onClick={() => handleToggle('innerPhotos', true)}
-                className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  orgPerms.innerPhotos
-                    ? 'bg-[#001511] text-white font-medium shadow-xs'
-                    : 'text-[#414846]/70 hover:text-[#1d1c16]'
-                }`}
-              >
-                On
-              </button>
-              <button
-                type="button"
-                onClick={() => handleToggle('innerPhotos', false)}
-                className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  !orgPerms.innerPhotos
-                    ? 'bg-[#001511] text-white font-medium shadow-xs'
-                    : 'text-[#414846]/70 hover:text-[#1d1c16]'
-                }`}
-              >
-                Off
-              </button>
-            </div>
-          </div>
-
-          {/* Toggle 6: Delivery timestamp */}
+          {/* Toggle 3: Delivery / Occurrence timestamp */}
           <div className="flex items-center justify-between py-2.5 px-3 hover:bg-[#f8f3ea]/50 transition-colors rounded-lg">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[#48645c] text-[20px]">schedule</span>
-              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Delivery timestamp & carrier log</span>
+              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Timeline & event timestamps</span>
             </div>
             <div className="flex bg-[#f2ede4] rounded-full p-0.5 shrink-0" role="group">
               <button
                 type="button"
                 onClick={() => handleToggle('deliveryTimestamp', true)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  orgPerms.deliveryTimestamp
+                  permissions.deliveryTimestamp
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -370,7 +216,7 @@ export default function DraftsScreen() {
                 type="button"
                 onClick={() => handleToggle('deliveryTimestamp', false)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  !orgPerms.deliveryTimestamp
+                  !permissions.deliveryTimestamp
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -380,18 +226,18 @@ export default function DraftsScreen() {
             </div>
           </div>
 
-          {/* Toggle 7: Your phone number */}
+          {/* Toggle 4: Contact details */}
           <div className="flex items-center justify-between py-2.5 px-3 hover:bg-[#f8f3ea]/50 transition-colors rounded-lg">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[#414846]/60 text-[20px]">call</span>
-              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Your phone number</span>
+              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Your contact information</span>
             </div>
             <div className="flex bg-[#f2ede4] rounded-full p-0.5 shrink-0" role="group">
               <button
                 type="button"
                 onClick={() => handleToggle('phoneNumber', true)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  orgPerms.phoneNumber
+                  permissions.phoneNumber
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -402,7 +248,7 @@ export default function DraftsScreen() {
                 type="button"
                 onClick={() => handleToggle('phoneNumber', false)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  !orgPerms.phoneNumber
+                  !permissions.phoneNumber
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -412,18 +258,18 @@ export default function DraftsScreen() {
             </div>
           </div>
 
-          {/* Toggle 8: Payment details */}
+          {/* Toggle 5: Payment details */}
           <div className="flex items-center justify-between py-2.5 px-3 hover:bg-[#f8f3ea]/50 transition-colors rounded-lg">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[#414846]/60 text-[20px]">credit_card</span>
-              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Payment & bank details</span>
+              <span className="font-body-sm text-sm text-[#1d1c16] font-medium">Direct banking credentials</span>
             </div>
             <div className="flex bg-[#f2ede4] rounded-full p-0.5 shrink-0" role="group">
               <button
                 type="button"
                 onClick={() => handleToggle('paymentDetails', true)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  orgPerms.paymentDetails
+                  permissions.paymentDetails
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -434,7 +280,7 @@ export default function DraftsScreen() {
                 type="button"
                 onClick={() => handleToggle('paymentDetails', false)}
                 className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
-                  !orgPerms.paymentDetails
+                  !permissions.paymentDetails
                     ? 'bg-[#001511] text-white font-medium shadow-xs'
                     : 'text-[#414846]/70 hover:text-[#1d1c16]'
                 }`}
@@ -443,6 +289,58 @@ export default function DraftsScreen() {
               </button>
             </div>
           </div>
+
+          {/* Dynamic Attached Exhibits Toggles */}
+          {evidenceList.map((ev) => {
+            const isEnclosed = selectedOrgAllowedEvidence.includes(ev.id);
+            return (
+              <div key={ev.id} className="flex items-center justify-between py-2.5 px-3 hover:bg-[#f8f3ea]/50 transition-colors rounded-lg">
+                <div className="flex items-center gap-3 min-w-0">
+                  {ev.url ? (
+                    <img src={ev.url} alt={ev.name} className="w-6 h-6 rounded object-cover border border-[#ddd5c7] shrink-0" />
+                  ) : (
+                    <span className="material-symbols-outlined text-[#48645c] text-[20px] shrink-0">
+                      {ev.type === 'photo' ? 'photo_camera' : 'receipt_long'}
+                    </span>
+                  )}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-body-sm text-sm text-[#1d1c16] font-medium truncate">{ev.name}</span>
+                    <span className="font-label-sm text-[10px] text-[#48645c] bg-[#cbd6c6]/50 px-1.5 py-0.2 rounded font-semibold shrink-0">
+                      {ev.size}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex bg-[#f2ede4] rounded-full p-0.5 shrink-0" role="group">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isEnclosed) toggleEvidenceForOrg(selectedOrg.slug, ev.id);
+                    }}
+                    className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
+                      isEnclosed
+                        ? 'bg-[#001511] text-white font-medium shadow-xs'
+                        : 'text-[#414846]/70 hover:text-[#1d1c16]'
+                    }`}
+                  >
+                    On
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isEnclosed) toggleEvidenceForOrg(selectedOrg.slug, ev.id);
+                    }}
+                    className={`px-3 py-1 rounded-full font-label-sm text-xs transition-all ${
+                      !isEnclosed
+                        ? 'bg-[#001511] text-white font-medium shadow-xs'
+                        : 'text-[#414846]/70 hover:text-[#1d1c16]'
+                    }`}
+                  >
+                    Off
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Assurance text */}
@@ -461,7 +359,7 @@ export default function DraftsScreen() {
             03 // BRIEF FOR THEM (PASSAGE CARD EXCERPT)
           </span>
           <span className="font-label-sm text-xs text-[#b51d04] uppercase tracking-wider font-semibold">
-            {selectedOrg.ticketType}
+            {selectedOrg.ticketType || `${selectedOrg.slug}.resolution.v1`}
           </span>
         </div>
 
@@ -487,29 +385,36 @@ export default function DraftsScreen() {
 
             {/* Brief Narrative */}
             <p className="font-body-md text-sm sm:text-base text-[#1d1c16] leading-relaxed pr-4 mb-4">
-              {selectedOrg.slug === 'swiftroute' ? (
-                <>SwiftRoute needs to inspect a damaged parcel delivered on 2 October at 6:42 pm (AWB: SR-882190). The box photo shows severe crushing on one corner. Four ceramic plates fractured in transit. {orgPerms.invoice ? 'Invoice attached.' : 'Invoice and price details withheld.'}</>
-              ) : selectedOrg.slug === 'shopmart' ? (
-                <>Sahyadri Home Goods order SHG-20418 delivered damaged via SwiftRoute. Requesting direct replacement of damaged dinner set. Transit damage verified with photographic exhibits.</>
-              ) : (
-                <>{activeDraft?.title}: {activeCase.narrative}</>
-              )}
+              {getBriefText()}
             </p>
 
-            {/* Photographic exhibit attachment inside brief */}
-            {orgPerms.boxPhoto && (
-              <div className="p-3 bg-[#f8f3ea] rounded-xl border border-[#ddd5c7] flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-[#e7e2d9] border border-[#ddd5c7] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[24px] text-[#48645c]">image</span>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-label-sm text-xs text-[#1d1c16] font-semibold truncate">
-                    IMG_0842_DAMAGE.JPG
-                  </span>
-                  <span className="font-label-sm text-[11px] text-[#414846]">
-                    Primary photographic proof attached • 2.4 MB
-                  </span>
-                </div>
+            {/* Enclosed Exhibits inside brief */}
+            {enclosedExhibits.length > 0 && (
+              <div className="flex flex-col gap-2 mb-4">
+                <span className="font-label-sm text-[11px] uppercase tracking-wider text-[#414846] font-semibold">
+                  Transmitted Evidence ({enclosedExhibits.length}):
+                </span>
+                {enclosedExhibits.map(ev => (
+                  <div key={ev.id} className="p-3 bg-[#f8f3ea] rounded-xl border border-[#ddd5c7] flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-[#e7e2d9] border border-[#ddd5c7] flex items-center justify-center">
+                      {ev.url ? (
+                        <img src={ev.url} alt={ev.name} className="w-full h-full object-cover" />
+                      ) : ev.type === 'photo' ? (
+                        <span className="material-symbols-outlined text-[24px] text-[#48645c]">image</span>
+                      ) : (
+                        <span className="text-xl">📄</span>
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-label-sm text-xs text-[#1d1c16] font-semibold truncate">
+                        {ev.name}
+                      </span>
+                      <span className="font-label-sm text-[11px] text-[#414846]">
+                        {ev.tag || (ev.type === 'photo' ? 'Photographic proof' : 'Official Document')} • {ev.size}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -523,7 +428,7 @@ export default function DraftsScreen() {
                   Direct Escrow Notification
                 </span>
                 <span className="text-[11px] text-[#414846]">
-                  Channel: {selectedOrg.channel}
+                  Channel: {selectedOrg.channel || 'Direct Ingestion (REST API)'}
                 </span>
               </div>
 
@@ -555,7 +460,7 @@ export default function DraftsScreen() {
           />
           <label htmlFor="relay-checkbox" className="cursor-pointer text-xs text-[#1d1c16] leading-relaxed">
             <span className="font-semibold block mb-0.5">Automated Evidence Relay</span>
-            Allow Passage to forward the courier's inspection result directly to the seller when completed, without asking me to manually download and email it.
+            Allow Passage to forward the counterparty's inspection or resolution results directly across all relevant parties without manual intervention.
           </label>
         </div>
       </section>
@@ -567,7 +472,7 @@ export default function DraftsScreen() {
           type="button"
           disabled={isDispatching}
           onClick={approveAndDispatch}
-          className="w-full h-14 bg-[#d9381e] hover:bg-[#b51d04] text-white font-body-md text-base font-semibold rounded-full shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-75"
+          className="w-full h-14 bg-[#d9381e] hover:bg-[#b51d04] text-white font-body-md text-base font-semibold rounded-full shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-75 cursor-pointer"
         >
           {isDispatching ? (
             <>
