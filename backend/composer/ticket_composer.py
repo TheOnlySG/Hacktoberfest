@@ -261,15 +261,26 @@ def compose_drafts(passage: dict, org_plan: dict) -> list:
                 ticket_schema=json.dumps(schema_content)
             )
             
+            model_to_use = getattr(settings, 'GROQ_MODEL', 'openai/gpt-oss-120b')
             try:
-                response = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=[
-                        {"role": "system", "content": prompt},
-                        {"role": "user", "content": f"Generate ticket draft for {slug}."}
-                    ],
-                    response_format={"type": "json_object"}
-                )
+                try:
+                    response = client.chat.completions.create(
+                        model=model_to_use,
+                        messages=[
+                            {"role": "system", "content": prompt},
+                            {"role": "user", "content": f"Generate ticket draft for {slug}."}
+                        ],
+                        response_format={"type": "json_object"}
+                    )
+                except Exception:
+                    response = client.chat.completions.create(
+                        model="openai/gpt-oss-20b",
+                        messages=[
+                            {"role": "system", "content": prompt},
+                            {"role": "user", "content": f"Generate ticket draft for {slug}."}
+                        ],
+                        response_format={"type": "json_object"}
+                    )
                 
                 result = json.loads(response.choices[0].message.content)
                 # In a robust implementation, we would validate result against schema using jsonschema here

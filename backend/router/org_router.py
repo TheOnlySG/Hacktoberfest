@@ -150,15 +150,26 @@ def determine_org_plan(passage: dict) -> dict:
             passage_summary=json.dumps(passage_summary)
         )
         
+        model_to_use = getattr(settings, 'GROQ_MODEL', 'openai/gpt-oss-120b')
         try:
-            response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
-                    {"role": "system", "content": prompt},
-                    {"role": "user", "content": "Suggest organizations in JSON format: {\"suggested_orgs\": [{\"slug\": \"...\", \"reason\": \"...\"}]}"}
-                ],
-                response_format={"type": "json_object"}
-            )
+            try:
+                response = client.chat.completions.create(
+                    model=model_to_use,
+                    messages=[
+                        {"role": "system", "content": prompt},
+                        {"role": "user", "content": "Suggest organizations in JSON format: {\"suggested_orgs\": [{\"slug\": \"...\", \"reason\": \"...\"}]}"}
+                    ],
+                    response_format={"type": "json_object"}
+                )
+            except Exception:
+                response = client.chat.completions.create(
+                    model="openai/gpt-oss-20b",
+                    messages=[
+                        {"role": "system", "content": prompt},
+                        {"role": "user", "content": "Suggest organizations in JSON format: {\"suggested_orgs\": [{\"slug\": \"...\", \"reason\": \"...\"}]}"}
+                    ],
+                    response_format={"type": "json_object"}
+                )
             
             result = json.loads(response.choices[0].message.content)
             for suggestion in result.get('suggested_orgs', []):
