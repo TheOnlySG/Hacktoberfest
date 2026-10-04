@@ -1,0 +1,19 @@
+{
+  "name": "passage",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Tell it once. We file it everywhere. Cross-organization problem resolution.",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "preview": "npm --prefix frontend run preview"
+  },
+  "keywords": [
+    "passage",
+    "dispute-resolution",
+    "gemma4",
+    "open311"
+  ],
+  "author": "Passage Core Team",
+  "license": "Apache-2.0"
+}
