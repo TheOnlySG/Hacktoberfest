@@ -25,3 +25,4 @@ Thumbs.db
 # Passage specific
 passage.db
 *.log
+.pytest_cache/
