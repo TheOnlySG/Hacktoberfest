@@ -5,13 +5,22 @@ import confetti from 'canvas-confetti';
 export default function ResolvedScreen() {
   const {
     activeCase,
+    organizations,
     timelineEvents,
     switchCase,
     caseKey,
     isEscalated
   } = usePassage();
 
-  const outcome = activeCase.resolvedOutcome;
+  const targetOrg = activeCase.escalation?.targetOrg || organizations[1]?.name || organizations[0]?.name || 'Regulatory Authority';
+  const statute = activeCase.escalation?.statute || 'Consumer Protection Standards & Sectoral Redressal Rules';
+
+  const outcome = activeCase.resolvedOutcome || {
+    summary: `Dispute successfully passaged across ${organizations.map(o => o.name).join(' & ') || 'all involved counterparties'}. Full resolution record cryptographically verified and attested.`,
+    retellingsAvoided: (organizations.length * 2) || 4,
+    hoursSaved: 6.5,
+    finalStatus: 'Case Resolved & Attested'
+  };
 
   useEffect(() => {
     if (isEscalated) return;
@@ -32,7 +41,7 @@ export default function ResolvedScreen() {
       docket: activeCase.docketSerial,
       user: activeCase.user,
       case: activeCase.title,
-      outcome: activeCase.resolvedOutcome,
+      outcome: outcome,
       chain: timelineEvents
     }, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -58,7 +67,7 @@ export default function ResolvedScreen() {
         </h1>
         <p className="font-body-lg text-[#67625a] text-base sm:text-lg leading-relaxed max-w-2xl">
           {isEscalated 
-            ? `Case passaged and formally submitted to ${activeCase.escalation.targetOrg} under ${activeCase.escalation.statute}. Awaiting regulatory adjudication.`
+            ? `Case passaged and formally submitted to ${targetOrg} under ${statute}. Awaiting regulatory adjudication.`
             : outcome.summary}
         </p>
       </div>

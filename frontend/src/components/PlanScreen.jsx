@@ -24,7 +24,7 @@ export default function PlanScreen() {
         <div className="flex items-center gap-2">
           <span className="font-label-md text-xs text-[#14181a] font-medium">CHAIN INTEGRITY</span>
           <span className="font-label-sm text-[10px] px-2 py-0.5 rounded bg-[#cbd6c6] text-[#0f2b25] font-semibold uppercase">
-            TRIPARTITE
+            {organizations.length === 1 ? 'DIRECT' : organizations.length === 2 ? 'BIPARTITE' : organizations.length === 3 ? 'TRIPARTITE' : 'MULTI-PARTY'}
           </span>
           <span className="font-label-sm text-[11px] text-[#67625a]">REF: {activeCase.docketSerial}</span>
         </div>

@@ -4,13 +4,22 @@ import { usePassage } from '../context/PassageContext';
 export default function EscalationScreen() {
   const {
     activeCase,
+    organizations,
     triggerEscalation,
     authorizeEscalationFiling,
     isEscalated,
     setCurrentScreen
   } = usePassage();
 
-  const esc = activeCase.escalation;
+  const targetAuthority = organizations.find(o => o.role === 'oversight' || (o.category || '').toLowerCase().includes('regulatory') || (o.category || '').toLowerCase().includes('authority')) || organizations[1] || organizations[0] || { name: 'Statutory Regulatory Authority' };
+
+  const esc = activeCase.escalation || {
+    triggerReason: `${organizations[0]?.name || 'Counterparty'} failed to provide verifiable resolution within statutory turnaround SLA.`,
+    targetOrg: targetAuthority.name,
+    statute: 'Consumer Protection (E-Commerce) Rules 2020 & Sectoral Redressal Standards',
+    draftSummary: `Statutory non-compliance petition prepared against ${organizations[0]?.name || 'Respondent'} for unresolved dispute #${activeCase.docketSerial}. Unconsented private data redacted; full verified chain attached.`,
+    remedyClaim: 'Immediate statutory investigation, binding resolution order, and mandatory customer redressal.'
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">

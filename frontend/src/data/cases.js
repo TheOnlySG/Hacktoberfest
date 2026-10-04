@@ -29,6 +29,7 @@ export const DEMO_CASES = {
         type: "photo",
         category: "Damage Verification",
         size: "1.8 MB",
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuBw3aFZ6gMOWHGkS844SjvfP65zybGcIK95vPzNeveuzNyuJ0lIUjbnydp4GpcTrGAGjY93n_EHMLGYD5hLZpL-Zd_XL2tK5wKzFSgk9Bz1sGAQiWg0eOQAnus0g_vyXkuaaVG5vdKi0XEFcws5aI1FZpK36Dtvwd_Z11pJFyHpA0AL6CW-zyTSjwsxWuqLQUMeUyM4ysifMStA0PPkbs80flpatBZTUp6L5urtOYZ0ZDDuqvRqo7oO",
         tag: "Transit Damage",
         preview: "Outer box crushed corner with courier label visible",
         icon: "image"
@@ -232,6 +233,7 @@ export const DEMO_CASES = {
         type: "photo",
         category: "Point of Sale",
         size: "1.2 MB",
+        url: "https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=800&q=80",
         tag: "POS Error Slip",
         preview: "POS Slip reading 'Response Code 91: Issuer Timeout'",
         icon: "receipt"
@@ -389,6 +391,7 @@ export const DEMO_CASES = {
         type: "photo",
         category: "Vehicle Damage",
         size: "2.1 MB",
+        url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDFLmMrvreelpdxJDgUp7jEMwsheLQ-UuUCuol5tdMt8nVE0cl3rIAMv_OctWYVyHxD7WwxcG70MhD8tJr5JSk5OAmVHxnDfaQwuuoVB6F6O8LfiEAf1yWYf9DtvSkMYHGQo2XgJez7MChht_pnLO_Iu80TsJKYbQBRx7cn8UcJawcoP8NjTG4uM074_KjCt7lDl5uBZ3MfhipwiG_KdgWH4lYQoa7LVmSbRwlDwdVy_XJt5PbteXPM",
         tag: "KA-02-JH-4419",
         preview: "Honda Activa submerged past air filter & crankcase",
         icon: "two_wheeler"

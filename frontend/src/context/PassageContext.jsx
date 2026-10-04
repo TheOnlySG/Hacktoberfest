@@ -26,9 +26,9 @@ const CUSTOM_TEMPLATE = {
       timestamp: "Today • Just now",
       type: "docket_created",
       title: "Intake Dossier Opened",
-      desc: "Ready for custom query entry, receipt/image upload, and Groq-powered multi-organization routing.",
+      desc: "Ready for custom query entry, receipt/image upload, and automated multi-organization routing.",
       hash: "8f4a19b3c4e098df2411aa784bcf65103a890123ef65a4bc0192348574109abc",
-      author: "Passage Groq Engine"
+      author: "Passage Resolution Engine"
     }
   ]
 };
@@ -185,7 +185,7 @@ export const PassageProvider = ({ children }) => {
         title: "New Intake Dossier Opened",
         desc: "Ready for user dispute narrative and evidentiary uploads.",
         hash: generateHash(),
-        author: "Passage Groq Engine"
+        author: "Passage Resolution Engine"
       }
     ]);
     setBackendPassageId(null);
@@ -237,7 +237,7 @@ export const PassageProvider = ({ children }) => {
               ticketRef: `${o.slug.slice(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`,
               channel: 'Direct Dispatch (REST & Webhook)',
               sla: '24h Response • 72h Resolution',
-              rationale: o.reason || 'Party identified by Groq Org Router as responsible for resolution.',
+              rationale: o.reason || 'Party identified by Passage Protocol Router as responsible for resolution.',
               requires: ['Dispute Narrative', 'Reference Identifiers', 'Attached Exhibits'],
               withholds: ['Unconsented banking credentials', 'Third-party private logs'],
               allowedEvidence: evidenceList.map(e => e.id)
@@ -265,10 +265,10 @@ export const PassageProvider = ({ children }) => {
           id: `evt-${Date.now()}`,
           timestamp: `Today • ${getTimeString()}`,
           type: "compiled",
-          title: "AI Compilation Completed (Groq AI / Backend API)",
+          title: "AI Compilation Completed (Resolution Engine / Backend API)",
           desc: `Extracted entities and mapped dynamic resolution plan for ${organizations.length || 2} counterparties.`,
           hash: generateHash(),
-          author: "Passage Compiler (Groq API)"
+          author: "Passage Resolution Compiler"
         }
       ]);
       setCurrentScreen('plan');
@@ -393,7 +393,7 @@ export const PassageProvider = ({ children }) => {
 
       setTimelineEvents(prev => [...prev, ...newEvents]);
       setCurrentScreen('tracker');
-    }, 1500);
+    }, 400);
   };
 
   // Answer a question from receiving organization
@@ -612,6 +612,7 @@ export const PassageProvider = ({ children }) => {
         setRelayConsent,
         timelineEvents,
         pendingQuestion,
+        setPendingQuestion,
         answeredQuestions,
         isEscalated,
         isResolved,

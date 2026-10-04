@@ -43,7 +43,7 @@ function MainContent() {
           <div className="flex items-center gap-4 text-[11px] font-label-sm uppercase tracking-wider">
             <span>Apache-2.0 License</span>
             <span>•</span>
-            <span>Passage AI Engine (Groq)</span>
+            <span>Passage Resolution Engine</span>
             <span>•</span>
             <span>Open Org Registry</span>
           </div>

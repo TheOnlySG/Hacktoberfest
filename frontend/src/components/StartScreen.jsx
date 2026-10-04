@@ -57,7 +57,7 @@ export default function StartScreen() {
           Tell it <span className="italic font-headline-xl-mobile sm:font-headline-xl font-normal text-[#d9381e]">once</span>.
         </h1>
         <p className="font-body-md text-base sm:text-lg text-[#414846] mt-2 leading-relaxed max-w-prose">
-          Enter any dispute or customer service issue. Attach receipts, invoices, and photos. Groq AI extracts the timeline, resolves counterparties, and generates tailored schemas.
+          Enter any dispute or customer service issue. Attach receipts, invoices, and photos. Passage extracts the timeline, resolves counterparties, and generates tailored schemas.
         </p>
       </div>
 
@@ -191,7 +191,7 @@ export default function StartScreen() {
         )}
       </section>
 
-      {/* Groq AI Compilation Pipeline Card */}
+      {/* AI Compilation Pipeline Card */}
       <section className="bg-white rounded-[20px] p-5 sm:p-6 shadow-sm border border-[#ddd5c7] mb-8 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
@@ -227,11 +227,11 @@ export default function StartScreen() {
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="font-label-sm text-xs text-[#d9381e] font-bold">02</span>
               <span className="font-body-sm text-xs sm:text-sm text-[#1d1c16] font-medium truncate">
-                Groq AI entity extraction & multi-org routing
+                {isCompiling ? 'Extracting entities & resolving Indian authorities...' : 'Entity extraction & multi-organization routing'}
               </span>
             </div>
             <span className="px-2.5 py-0.5 bg-[#ffdad3] text-[#8f1100] font-label-sm text-[10px] tracking-wider uppercase rounded-full shrink-0 font-bold">
-              READY
+              {isCompiling ? 'ACTIVE' : 'READY'}
             </span>
           </div>
 
@@ -256,7 +256,7 @@ export default function StartScreen() {
           </div>
           <div className="flex justify-between items-center text-[#414846]">
             <span className="font-label-sm text-[10px] tracking-widest uppercase">
-              Groq AI Acceleration Engine
+              Passage Resolution Engine
             </span>
             <span className="font-label-sm text-[10px] tracking-widest font-semibold">
               Ready
@@ -277,10 +277,10 @@ export default function StartScreen() {
           {isCompiling ? (
             <span className="font-label-md text-xs tracking-widest uppercase text-white flex items-center gap-2">
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>Indexing Dossier with Groq AI...</span>
+              <span>Indexing Dossier...</span>
             </span>
           ) : (
-            <span>Build my Passage with Groq AI</span>
+            <span>Build my Message</span>
           )}
         </button>
 

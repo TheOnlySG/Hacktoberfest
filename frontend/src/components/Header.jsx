@@ -70,17 +70,17 @@ export default function Header() {
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f8f3ea] border border-[#ddd5c7]">
               <span className={`w-1.5 h-1.5 rounded-full ${backendConnected ? 'bg-emerald-500 animate-pulse' : 'bg-[#cbd6c6]'}`}></span>
               <span className="font-label-sm text-[10px] uppercase tracking-wider text-[#67625a]">
-                {backendConnected ? 'FastAPI Live' : 'Groq AI • Ready'}
+                {backendConnected ? 'FastAPI Live' : 'Protocol Engine • Ready'}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-[#0f2b25] text-white flex items-center justify-center text-xs font-label-sm font-medium">
-                {activeRole === 'user' ? activeCase.user.name.split(' ').map(n => n[0]).join('') : 'ORG'}
+                {activeRole === 'user' ? (activeCase.user?.name || 'U').split(' ').map(n => n[0]).join('') : 'ORG'}
               </div>
               <div className="hidden sm:flex flex-col text-left">
                 <span className="text-xs font-medium text-[#14181a] leading-tight">
-                  {activeRole === 'user' ? activeCase.user.name : activeCase.organizations.find(o => o.slug === activeRole)?.name}
+                  {activeRole === 'user' ? (activeCase.user?.name || 'User') : organizations.find(o => o.slug === activeRole)?.name || activeRole}
                 </span>
                 <span className="font-label-sm text-[10px] text-[#67625a]">
                   {activeRole === 'user' ? 'First-Party User' : 'Receiver Portal'}
@@ -128,10 +128,10 @@ export default function Header() {
           {/* Role Switcher: "View as" */}
           <div className="flex items-center gap-2 shrink-0">
             <span className="font-label-sm text-[10px] uppercase tracking-widest text-[#67625a]">View as:</span>
-            <div className="flex items-center gap-1 bg-[#f2ede4] p-0.5 rounded-md border border-[#ddd5c7]">
+            <div className="flex items-center gap-1 bg-[#f2ede4] p-0.5 rounded-md border border-[#ddd5c7] overflow-x-auto max-w-[280px] sm:max-w-none scrollbar-none">
               <button
                 onClick={() => setActiveRole('user')}
-                className={`px-2 py-0.5 text-[11px] font-label-sm uppercase tracking-wider rounded transition-all ${
+                className={`px-2.5 py-0.5 text-[11px] font-label-sm uppercase tracking-wider rounded transition-all whitespace-nowrap cursor-pointer ${
                   activeRole === 'user'
                     ? 'bg-[#0f2b25] text-white font-medium shadow-xs'
                     : 'text-[#67625a] hover:text-[#14181a]'
@@ -139,19 +139,33 @@ export default function Header() {
               >
                 You
               </button>
-              {organizations.map(org => (
-                <button
-                  key={org.slug}
-                  onClick={() => setActiveRole(org.slug)}
-                  className={`px-2 py-0.5 text-[11px] font-label-sm uppercase tracking-wider rounded transition-all ${
-                    activeRole === org.slug
-                      ? 'bg-[#0f2b25] text-white font-medium shadow-xs'
-                      : 'text-[#67625a] hover:text-[#14181a]'
-                  }`}
-                >
-                  {org.name.split(' ')[0]}
-                </button>
-              ))}
+              {(() => {
+                const seenSlugs = new Set();
+                const uniqueOrgs = [];
+                for (const org of organizations) {
+                  const norm = (org.slug || '').replace(/[-_]/g, '').toLowerCase();
+                  if (norm && !seenSlugs.has(norm)) {
+                    seenSlugs.add(norm);
+                    uniqueOrgs.push(org);
+                  }
+                }
+                return uniqueOrgs.map(org => {
+                  const cleanLabel = org.shortName || org.name.replace(/^(The|M\/s)\s+/i, '').split(' ')[0];
+                  return (
+                    <button
+                      key={org.slug}
+                      onClick={() => setActiveRole(org.slug)}
+                      className={`px-2.5 py-0.5 text-[11px] font-label-sm uppercase tracking-wider rounded transition-all whitespace-nowrap cursor-pointer ${
+                        activeRole === org.slug
+                          ? 'bg-[#0f2b25] text-white font-medium shadow-xs'
+                          : 'text-[#67625a] hover:text-[#14181a]'
+                      }`}
+                    >
+                      {cleanLabel}
+                    </button>
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>

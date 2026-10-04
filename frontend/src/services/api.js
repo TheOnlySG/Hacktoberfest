@@ -158,6 +158,17 @@ export async function approveEscalation(escalationId, payload = { approved: true
   }
 }
 
+export async function fetchSandboxTickets(orgSlug) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/sandbox/${orgSlug}/tickets`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('[API] fetchSandboxTickets failed:', err);
+    return [];
+  }
+}
+
 export async function updateSandboxStatus(orgSlug, ticketId, status) {
   try {
     const res = await fetch(`${API_BASE_URL}/sandbox/${orgSlug}/tickets/${ticketId}/status`, {
