@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { usePassage } from '../context/PassageContext';
 
 export default function StartScreen() {
@@ -7,9 +7,20 @@ export default function StartScreen() {
     narrative,
     setNarrative,
     evidenceList,
+    addEvidence,
+    removeEvidence,
     compilePassage,
     isCompiling
   } = usePassage();
+
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      addEvidence(e.target.files);
+      e.target.value = '';
+    }
+  };
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -65,9 +76,17 @@ export default function StartScreen() {
             <span className="font-label-sm text-xs uppercase tracking-wider text-[#414846] font-semibold">
               Attached Exhibits
             </span>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              multiple
+            />
             <button
               type="button"
-              className="font-label-sm text-xs uppercase tracking-wider text-[#1d1c16] underline underline-offset-4 decoration-[#c1c8c5] hover:text-[#d9381e] transition-colors inline-flex items-center"
+              onClick={() => fileInputRef.current?.click()}
+              className="font-label-sm text-xs uppercase tracking-wider text-[#1d1c16] underline underline-offset-4 decoration-[#c1c8c5] hover:text-[#d9381e] transition-colors inline-flex items-center cursor-pointer"
             >
               + Add files
             </button>
@@ -92,7 +111,8 @@ export default function StartScreen() {
               </div>
               <button
                 type="button"
-                className="font-label-sm text-[11px] uppercase tracking-wider text-[#d9381e] underline underline-offset-2 ml-2 shrink-0 hover:opacity-80"
+                onClick={() => removeEvidence(ev.id)}
+                className="font-label-sm text-[11px] uppercase tracking-wider text-[#d9381e] underline underline-offset-2 ml-2 shrink-0 hover:opacity-80 cursor-pointer"
               >
                 Remove
               </button>
