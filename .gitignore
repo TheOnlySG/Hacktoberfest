@@ -44,3 +44,5 @@ passage.db
 .Trashes
 ehthumbs.db
 Thumbs.db
+# Testing
+.pytest_cache/
