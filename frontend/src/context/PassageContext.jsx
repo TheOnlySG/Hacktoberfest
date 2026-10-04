@@ -79,18 +79,26 @@ export const PassageProvider = ({ children }) => {
     if (!files || files.length === 0) return;
     const newItems = Array.from(files).map((file, idx) => {
       const ext = file.name.split('.').pop()?.toLowerCase() || '';
-      const type = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)
+      const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+      const type = isImg
         ? 'photo'
         : ['pdf', 'doc', 'docx', 'txt'].includes(ext)
         ? 'invoice'
         : 'chat';
       const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
       const sizeStr = sizeMb === '0.0' ? `${(file.size / 1024).toFixed(0)} KB` : `${sizeMb} MB`;
+
+      let dataUrl = null;
+      if (isImg) {
+        dataUrl = URL.createObjectURL(file);
+      }
+
       return {
         id: `ev-uploaded-${Date.now()}-${idx}`,
         name: file.name,
         type: type,
-        size: sizeStr
+        size: sizeStr,
+        previewUrl: dataUrl
       };
     });
 
@@ -121,10 +129,10 @@ export const PassageProvider = ({ children }) => {
           id: `evt-${Date.now()}`,
           timestamp: `Today • ${getTimeString()}`,
           type: "compiled",
-          title: "AI Compilation Completed (Local Gemma 4)",
+          title: "AI Compilation Completed (Groq LPU Engine)",
           desc: "Extracted entities, verified timeline, and organized evidence policy.",
           hash: generateHash(),
-          author: "Gemma 4 (Local Ollama Engine)"
+          author: "Groq LPU Engine"
         }
       ]);
       setCurrentScreen('plan');

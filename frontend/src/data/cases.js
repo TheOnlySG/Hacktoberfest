@@ -146,9 +146,9 @@ export const DEMO_CASES = {
         timestamp: "04 Oct 2026 • 11:45 IST",
         type: "docket_created",
         title: "First-Party Statement Recorded",
-        desc: "Narrative compiled locally via Gemma 4 on user's machine. Zero external API leaks.",
+        desc: "Narrative compiled via Groq high-speed LPU engine. Zero external data retention.",
         hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        author: "Mira Sen (Local Passage Engine)"
+        author: "Mira Sen (Passage Engine)"
       },
       {
         id: "evt-2",

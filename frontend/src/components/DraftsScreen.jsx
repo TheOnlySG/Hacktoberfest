@@ -488,26 +488,26 @@ export default function DraftsScreen() {
             {/* Brief Narrative */}
             <p className="font-body-md text-sm sm:text-base text-[#1d1c16] leading-relaxed pr-4 mb-4">
               {selectedOrg.slug === 'swiftroute' ? (
-                <>SwiftRoute needs to inspect a damaged parcel delivered on 2 October at 6:42 pm (AWB: SR-882190). The box photo shows severe crushing on one corner. Four ceramic plates fractured in transit. {orgPerms.invoice ? 'Invoice attached.' : 'Invoice and price details withheld.'}</>
+                <>SwiftRoute needs to inspect a damaged parcel delivered on {orgPerms.deliveryTimestamp ? '2 October at 6:42 pm (AWB: SR-882190)' : '[Timestamp log withheld]'}. {orgPerms.boxPhoto ? 'The box photo shows severe crushing on one corner.' : '[Box exterior photo withheld]'} {orgPerms.innerPhotos ? 'Four ceramic plates fractured in transit.' : '[Inner damage photos withheld]'} {orgPerms.invoice ? 'Invoice attached.' : 'Invoice and price details withheld.'} {orgPerms.phoneNumber ? 'Phone: +91 98201 44812.' : '[Phone number withheld]'}</>
               ) : selectedOrg.slug === 'shopmart' ? (
-                <>Sahyadri Home Goods order SHG-20418 delivered damaged via SwiftRoute. Requesting direct replacement of damaged dinner set. Transit damage verified with photographic exhibits.</>
+                <>Sahyadri Home Goods order {orgPerms.orderDetails ? 'SHG-20418' : '[Order ID withheld]'} delivered damaged via SwiftRoute. {orgPerms.problemSummary ? 'Requesting direct replacement of damaged dinner set.' : '[Problem summary withheld]'} {orgPerms.invoice ? 'Invoice & price ₹4,299 attached.' : 'Invoice withheld.'} {orgPerms.boxPhoto || orgPerms.innerPhotos ? 'Transit damage verified with photographic exhibits.' : '[Photographic proof withheld]'}</>
               ) : (
-                <>{activeDraft?.title}: {activeCase.narrative}</>
+                <>{activeDraft?.title}: {orgPerms.problemSummary ? activeCase.narrative : '[Problem summary withheld]'}</>
               )}
             </p>
 
             {/* Photographic exhibit attachment inside brief */}
-            {orgPerms.boxPhoto && (
+            {(orgPerms.boxPhoto || orgPerms.innerPhotos) && (
               <div className="p-3 bg-[#f8f3ea] rounded-xl border border-[#ddd5c7] flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-[#e7e2d9] border border-[#ddd5c7] flex items-center justify-center">
                   <span className="material-symbols-outlined text-[24px] text-[#48645c]">image</span>
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="font-label-sm text-xs text-[#1d1c16] font-semibold truncate">
-                    IMG_0842_DAMAGE.JPG
+                    {orgPerms.boxPhoto ? 'IMG_0842_DAMAGE.JPG' : 'EXHIBIT_02_INNER_DAMAGE.JPG'}
                   </span>
                   <span className="font-label-sm text-[11px] text-[#414846]">
-                    Primary photographic proof attached • 2.4 MB
+                    Photographic proof attached • {orgPerms.boxPhoto && orgPerms.innerPhotos ? '2 Exhibits Enclosed' : '1 Exhibit Enclosed'}
                   </span>
                 </div>
               </div>

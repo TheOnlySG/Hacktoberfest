@@ -122,28 +122,37 @@ export default function StartScreen() {
       </section>
 
       {/* Evidence Preview Card */}
-      <section className="bg-white rounded-[20px] p-5 sm:p-6 shadow-sm border border-[#ddd5c7] mb-5">
-        <div className="flex items-center justify-between pb-3">
-          <span className="font-label-sm text-xs uppercase tracking-wider text-[#414846] font-semibold">
-            Exhibit Preview // 01
-          </span>
-          <span className="font-label-sm text-xs text-[#414846]">
-            Visual Damage Verification
-          </span>
-        </div>
-        <div className="relative w-full h-44 sm:h-52 rounded-xl overflow-hidden bg-[#ece8df] border border-[#ddd5c7] flex items-center justify-center">
-          <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBw3aFZ6gMOWHGkS844SjvfP65zybGcIK95vPzNeveuzNyuJ0lIUjbnydp4GpcTrGAGjY93n_EHMLGYD5hLZpL-Zd_XL2tK5wKzFSgk9Bz1sGAQiWg0eOQAnus0g_vyXkuaaVG5vdKi0XEFcws5aI1FZpK36Dtvwd_Z11pJFyHpA0AL6CW-zyTSjwsxWuqLQUMeUyM4ysifMStA0PPkbs80flpatBZTUp6L5urtOYZ0ZDDuqvRqo7oO"
-            alt="Exhibit damage evidence"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute bottom-2.5 left-2.5 px-3 py-1 bg-[#001511]/80 backdrop-blur-sm rounded-full">
-            <span className="font-label-sm text-[10px] text-white tracking-widest uppercase font-semibold">
-              Verified Ingestion
-            </span>
-          </div>
-        </div>
-      </section>
+      {(() => {
+        const uploadedImg = evidenceList.slice().reverse().find(e => e.previewUrl);
+        const defaultImg = "https://lh3.googleusercontent.com/aida-public/AB6AXuBw3aFZ6gMOWHGkS844SjvfP65zybGcIK95vPzNeveuzNyuJ0lIUjbnydp4GpcTrGAGjY93n_EHMLGYD5hLZpL-Zd_XL2tK5wKzFSgk9Bz1sGAQiWg0eOQAnus0g_vyXkuaaVG5vdKi0XEFcws5aI1FZpK36Dtvwd_Z11pJFyHpA0AL6CW-zyTSjwsxWuqLQUMeUyM4ysifMStA0PPkbs80flpatBZTUp6L5urtOYZ0ZDDuqvRqo7oO";
+        const imgSrc = uploadedImg ? uploadedImg.previewUrl : defaultImg;
+        const imgName = uploadedImg ? uploadedImg.name : "Visual Damage Verification";
+
+        return (
+          <section className="bg-white rounded-[20px] p-5 sm:p-6 shadow-sm border border-[#ddd5c7] mb-5">
+            <div className="flex items-center justify-between pb-3">
+              <span className="font-label-sm text-xs uppercase tracking-wider text-[#414846] font-semibold">
+                Exhibit Preview // 01
+              </span>
+              <span className="font-label-sm text-xs text-[#414846] truncate max-w-[200px]">
+                {imgName}
+              </span>
+            </div>
+            <div className="relative w-full h-44 sm:h-52 rounded-xl overflow-hidden bg-[#ece8df] border border-[#ddd5c7] flex items-center justify-center">
+              <img
+                src={imgSrc}
+                alt="Exhibit evidence"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-2.5 left-2.5 px-3 py-1 bg-[#001511]/80 backdrop-blur-sm rounded-full">
+                <span className="font-label-sm text-[10px] text-white tracking-widest uppercase font-semibold">
+                  Verified Ingestion
+                </span>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Local Compilation Pipeline Card (from screen_1_start) */}
       <section className="bg-white rounded-[20px] p-5 sm:p-6 shadow-sm border border-[#ddd5c7] mb-8 flex flex-col gap-4">
@@ -210,7 +219,7 @@ export default function StartScreen() {
           </div>
           <div className="flex justify-between items-center text-[#414846]">
             <span className="font-label-sm text-[10px] tracking-widest uppercase">
-              Local LLM Sandbox (Gemma 4)
+              Fast LPU AI Engine (Groq)
             </span>
             <span className="font-label-sm text-[10px] tracking-widest font-semibold">
               68%
@@ -231,7 +240,7 @@ export default function StartScreen() {
           {isCompiling ? (
             <span className="font-label-md text-xs tracking-widest uppercase text-white flex items-center gap-2">
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>Indexing Dossier with Gemma 4...</span>
+              <span>Indexing Dossier with Groq...</span>
             </span>
           ) : (
             <span>Build my Passage</span>

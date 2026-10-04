@@ -57,7 +57,7 @@ export default function Header() {
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f8f3ea] border border-[#ddd5c7]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#cbd6c6]"></span>
               <span className="font-label-sm text-[10px] uppercase tracking-wider text-[#67625a]">
-                Gemma 4 • Local Ollama
+                Groq Engine • High Speed AI
               </span>
             </div>
 
