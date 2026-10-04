@@ -13,7 +13,8 @@ export default function Header() {
     activeCase,
     pendingQuestion,
     organizations,
-    backendConnected
+    backendConnected,
+    isEscalated
   } = usePassage();
 
   return (
@@ -89,7 +90,7 @@ export default function Header() {
               { id: 'tracker', label: '4. Tracker' },
               { id: 'inbox', label: '5. Inbox', badge: pendingQuestion ? '1' : null },
               { id: 'escalation', label: '6. Escalation' },
-              { id: 'resolved', label: '7. Resolved' }
+              { id: 'resolved', label: '7. Passaged' }
             ].map(tab => {
               const active = currentScreen === tab.id;
               return (

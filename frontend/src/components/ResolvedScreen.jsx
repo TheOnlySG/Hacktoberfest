@@ -7,12 +7,14 @@ export default function ResolvedScreen() {
     activeCase,
     timelineEvents,
     switchCase,
-    caseKey
+    caseKey,
+    isEscalated
   } = usePassage();
 
   const outcome = activeCase.resolvedOutcome;
 
   useEffect(() => {
+    if (isEscalated) return;
     try {
       confetti({
         particleCount: 50,
@@ -23,7 +25,7 @@ export default function ResolvedScreen() {
     } catch (e) {
       // safe fallback
     }
-  }, []);
+  }, [isEscalated]);
 
   const handleDownloadDocket = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
@@ -46,16 +48,18 @@ export default function ResolvedScreen() {
       {/* Header */}
       <div className="pt-2 pb-6 flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#48645c]"></span>
+          <span className={`w-2.5 h-2.5 rounded-full ${isEscalated ? 'bg-[#d9381e]' : 'bg-[#48645c]'}`}></span>
           <span className="font-label-sm text-xs uppercase tracking-widest text-[#67625a]">
-            Archival Docket • #{activeCase.docketSerial}
+            {isEscalated ? 'Regulatory Escalation Docket' : 'Passaged Docket'} • #{activeCase.docketSerial}
           </span>
         </div>
         <h1 className="font-headline-xl text-4xl sm:text-6xl text-[#14181a] tracking-tight">
-          Resolved.
+          Passaged.
         </h1>
         <p className="font-body-lg text-[#67625a] text-base sm:text-lg leading-relaxed max-w-2xl">
-          {outcome.summary}
+          {isEscalated 
+            ? `Case passaged and formally submitted to ${activeCase.escalation.targetOrg} under ${activeCase.escalation.statute}. Awaiting regulatory adjudication.`
+            : outcome.summary}
         </p>
       </div>
 
@@ -119,11 +123,11 @@ export default function ResolvedScreen() {
               Execution Integrity Fingerprint
             </span>
             <h3 className="font-semibold text-base text-[#14181a]">
-              Sealed Resolution Package
+              {isEscalated ? 'Passaged Regulatory Dossier' : 'Sealed Passaged Package'}
             </h3>
           </div>
-          <span className="font-label-sm text-[11px] px-3 py-1 rounded-full bg-[#cbd6c6] text-[#0f2b25] font-bold uppercase">
-            IMMUTABLE
+          <span className="font-label-sm text-[11px] px-3 py-1 rounded-full font-bold uppercase bg-[#cbd6c6] text-[#0f2b25]">
+            PASSAGED
           </span>
         </div>
 

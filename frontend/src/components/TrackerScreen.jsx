@@ -7,6 +7,7 @@ export default function TrackerScreen() {
     organizations,
     timelineEvents,
     pendingQuestion,
+    isEscalated,
     setCurrentScreen,
     simulateNextStep,
     triggerEscalation
@@ -38,9 +39,9 @@ export default function TrackerScreen() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#48645c] animate-pulse"></span>
-          <span className="font-label-sm text-xs uppercase tracking-wider text-[#001511] font-semibold">
-            Attested Live Chain
+          <span className={`w-2 h-2 rounded-full ${isEscalated ? 'bg-[#d9381e]' : 'bg-[#48645c]'} animate-pulse`}></span>
+          <span className={`font-label-sm text-xs uppercase tracking-wider font-semibold ${isEscalated ? 'text-[#8f1100]' : 'text-[#001511]'}`}>
+            {isEscalated ? 'Status: Passaged (Escalated)' : 'Attested Live Chain'}
           </span>
         </div>
       </div>
@@ -52,7 +53,9 @@ export default function TrackerScreen() {
             {activeCase.title.split(':')[1] || activeCase.title}.
           </h1>
           <p className="font-body-md text-sm sm:text-base text-[#414846] mt-1.5 leading-relaxed">
-            Coordinated resolution active across {organizations.map(o => o.name).join(' & ')}.
+            {isEscalated 
+              ? `Formal dossier passaged to ${activeCase.escalation.targetOrg} under ${activeCase.escalation.statute}.`
+              : `Coordinated resolution active across ${organizations.map(o => o.name).join(' & ')}.`}
           </p>
         </div>
 
@@ -62,13 +65,13 @@ export default function TrackerScreen() {
             PASSAGE
           </span>
           <span className="font-label-sm text-[10px] sm:text-[11px] uppercase tracking-tighter text-[#d9381e] leading-tight font-extrabold my-0.5">
-            ACCEPTED
+            {isEscalated ? 'PASSAGED' : 'ACCEPTED'}
           </span>
           <span className="font-label-sm text-[7px] sm:text-[8px] tracking-tight text-[#d9381e] leading-none">
             04 OCT 2026
           </span>
           <span className="font-label-sm text-[6px] sm:text-[7px] uppercase tracking-widest text-[#d9381e] leading-tight mt-0.5">
-            ATTESTED
+            {isEscalated ? 'REGULATORY' : 'ATTESTED'}
           </span>
         </div>
       </div>
@@ -182,18 +185,24 @@ export default function TrackerScreen() {
         </div>
       </section>
 
-      {/* Pickup to be arranged status card */}
-      <div className="bg-[#ece8df] rounded-xl p-4 flex items-center justify-between mb-6 border border-[#ddd5c7]">
+      {/* Pickup to be arranged / Escalated Passaged status card */}
+      <div className={`rounded-xl p-4 flex items-center justify-between mb-6 border ${
+        isEscalated ? 'bg-[#ffdad3]/40 border-[#d9381e]/30' : 'bg-[#ece8df] border-[#ddd5c7]'
+      }`}>
         <div className="flex items-center gap-2.5">
           <span className="material-symbols-outlined text-[#d9381e] text-[22px]">
-            inventory_2
+            {isEscalated ? 'gavel' : 'inventory_2'}
           </span>
           <span className="font-body-sm text-xs sm:text-sm text-[#1d1c16] font-medium">
-            Pickup & inspection to be arranged by seller/carrier
+            {isEscalated 
+              ? `Formal dossier passaged & filed with ${activeCase.escalation.targetOrg} under ${activeCase.escalation.statute}. Awaiting regulatory order/reversal.`
+              : 'Pickup & inspection to be arranged by seller/carrier'}
           </span>
         </div>
-        <span className="font-label-sm text-[10px] uppercase tracking-wider text-[#414846] font-semibold bg-white/60 px-2 py-0.5 rounded">
-          PENDING DISPATCH
+        <span className={`font-label-sm text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded ${
+          isEscalated ? 'bg-[#d9381e] text-white' : 'bg-white/60 text-[#414846]'
+        }`}>
+          {isEscalated ? 'PASSAGED' : 'PENDING DISPATCH'}
         </span>
       </div>
 
@@ -211,20 +220,28 @@ export default function TrackerScreen() {
 
           <button
             onClick={simulateNextStep}
-            className="w-full h-14 rounded-full bg-[#d9381e] hover:bg-[#b51d04] text-white font-body-md text-sm font-semibold tracking-wide flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]"
+            className={`w-full h-14 rounded-full text-white font-body-md text-sm font-semibold tracking-wide flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] ${
+              isEscalated ? 'bg-[#0f2b25] hover:bg-[#1b3d35]' : 'bg-[#d9381e] hover:bg-[#b51d04]'
+            }`}
             type="button"
           >
-            <span>Fast-Forward Simulation Step</span>
-            <span className="material-symbols-outlined text-[20px]">fast_forward</span>
+            <span>{isEscalated ? 'Check Regulatory Docket' : 'Fast-Forward Simulation Step'}</span>
+            <span className="material-symbols-outlined text-[20px]">{isEscalated ? 'sync' : 'fast_forward'}</span>
           </button>
         </div>
 
-        <button
-          onClick={() => setCurrentScreen('escalation')}
-          className="text-center font-label-sm text-xs text-[#8f1100] uppercase tracking-wider py-2 hover:underline"
-        >
-          Check SLA Timers & Fast-Forward Regulatory Escalation →
-        </button>
+        {!isEscalated ? (
+          <button
+            onClick={() => setCurrentScreen('escalation')}
+            className="text-center font-label-sm text-xs text-[#8f1100] uppercase tracking-wider py-2 hover:underline"
+          >
+            Check SLA Timers & Fast-Forward Regulatory Escalation →
+          </button>
+        ) : (
+          <div className="text-center font-label-sm text-xs text-[#d9381e] uppercase tracking-wider py-2 font-semibold">
+            ● Case Passaged: Awaiting Statutory Remedy from {activeCase.escalation.targetOrg}
+          </div>
+        )}
       </div>
     </div>
   );

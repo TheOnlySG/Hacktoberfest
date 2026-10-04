@@ -351,6 +351,12 @@ export const PassageProvider = ({ children }) => {
 
   // Authorize Escalation
   const authorizeEscalationFiling = () => {
+    setIsEscalated(true);
+    setOrganizations(prev => prev.map(org => ({
+      ...org,
+      status: 'escalated'
+    })));
+
     // Call backend escalation approval API
     api.approveEscalation(activeCase.id || 'esc-default', {
       approved: true,
@@ -363,8 +369,8 @@ export const PassageProvider = ({ children }) => {
         id: `evt-esc-filed-${Date.now()}`,
         timestamp: `Today • ${getTimeString()}`,
         type: "escalation_filed",
-        title: `Formal Grievance Filed with ${activeCase.escalation.targetOrg}`,
-        desc: `Authorization confirmed by ${activeCase.user.name}. Digital docket forwarded with full audit trail.`,
+        title: `Formal Grievance Passaged to ${activeCase.escalation.targetOrg}`,
+        desc: `Authorization confirmed by ${activeCase.user.name}. Digital docket passaged with full audit trail under ${activeCase.escalation.statute}.`,
         hash: generateHash(),
         author: "Passage Escalation Engine"
       }
@@ -376,6 +382,23 @@ export const PassageProvider = ({ children }) => {
   const simulateNextStep = async () => {
     if (pendingQuestion) {
       setCurrentScreen('inbox');
+      return;
+    }
+
+    // If case has been escalated, do NOT resolve directly — maintain Passaged state
+    if (isEscalated) {
+      setTimelineEvents(prev => [
+        ...prev,
+        {
+          id: `evt-reg-docket-${Date.now()}`,
+          timestamp: `Today • ${getTimeString()}`,
+          type: "regulatory_acknowledgement",
+          title: `Docket Acknowledged by ${activeCase.escalation.targetOrg}`,
+          desc: `Statutory investigation active under ${activeCase.escalation.statute}. Case status is Passaged (Escalated to Regulatory Authority).`,
+          hash: generateHash(),
+          author: `${activeCase.escalation.targetOrg} Registry`
+        }
+      ]);
       return;
     }
 
@@ -414,7 +437,7 @@ export const PassageProvider = ({ children }) => {
           id: `evt-resolved-${Date.now()}`,
           timestamp: `Today • ${getTimeString()}`,
           type: "resolved",
-          title: "Problem Resolved & Final Docket Sealed",
+          title: "Problem Passaged & Final Docket Sealed",
           desc: res.summary,
           hash: generateHash(),
           author: "Passage Resolution Authority"
