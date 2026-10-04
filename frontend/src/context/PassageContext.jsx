@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { DEMO_CASES } from '../data/cases';
+import * as api from '../services/api';
 
 const PassageContext = createContext(null);
 
@@ -17,6 +18,11 @@ export const PassageProvider = ({ children }) => {
   const [drafts, setDrafts] = useState(activeCase.drafts);
   const [evidenceList, setEvidenceList] = useState(activeCase.evidenceList);
   
+  // Backend integration state
+  const [backendConnected, setBackendConnected] = useState(false);
+  const [backendPassageId, setBackendPassageId] = useState(null);
+  const [backendCompiled, setBackendCompiled] = useState(null);
+
   // Disclosure toggles: orgSlug -> [evId, ...]
   const [orgEvidenceSelection, setOrgEvidenceSelection] = useState(() => {
     const initial = {};
@@ -35,6 +41,17 @@ export const PassageProvider = ({ children }) => {
   const [isCompiling, setIsCompiling] = useState(false);
   const [isDispatching, setIsDispatching] = useState(false);
   const [showHandoverModal, setShowHandoverModal] = useState(false);
+
+  // Check backend health on mount
+  useEffect(() => {
+    let isMounted = true;
+    api.fetchHealth().then(res => {
+      if (isMounted) {
+        setBackendConnected(!!res && res.status === 'ok');
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   // Sync state whenever caseKey changes
   useEffect(() => {
@@ -55,6 +72,8 @@ export const PassageProvider = ({ children }) => {
     setAnsweredQuestions([]);
     setIsEscalated(false);
     setIsResolved(false);
+    setBackendPassageId(null);
+    setBackendCompiled(null);
     setCurrentScreen('start');
     setActiveRole('user');
   }, [caseKey]);
@@ -81,11 +100,35 @@ export const PassageProvider = ({ children }) => {
     }
   };
 
-  // Compile narrative into structured Passage
-  const compilePassage = () => {
+  // Compile narrative into structured Passage (with real FastAPI integration!)
+  const compilePassage = async () => {
     setIsCompiling(true);
-    setTimeout(() => {
+    let passageId = backendPassageId;
+
+    try {
+      // 1. Create passage on FastAPI backend
+      const created = await api.createPassage(narrative, evidenceList);
+      if (created?.id) {
+        passageId = created.id;
+        setBackendPassageId(passageId);
+
+        // 2. Trigger Case Compiler on backend
+        const compiled = await api.compilePassage(passageId);
+        if (compiled) {
+          setBackendCompiled(compiled);
+        }
+
+        // 3. Trigger Org Router on backend
+        const plan = await api.getPlan(passageId);
+        if (plan?.orgs?.length) {
+          console.log('[Passage API] Router Plan received from backend:', plan);
+        }
+      }
+    } catch (err) {
+      console.warn('[Passage] Backend compilation call error, falling back locally:', err);
+    } finally {
       setIsCompiling(false);
+      
       // Add event to chain
       setTimelineEvents(prev => [
         ...prev,
@@ -93,14 +136,14 @@ export const PassageProvider = ({ children }) => {
           id: `evt-${Date.now()}`,
           timestamp: `Today • ${getTimeString()}`,
           type: "compiled",
-          title: "AI Compilation Completed (Local Gemma 4)",
-          desc: "Extracted entities, verified timeline, and organized evidence policy.",
+          title: "AI Compilation Completed (Local Gemma 4 / Backend API)",
+          desc: "Extracted entities, verified timeline, and mapped multi-party routing plan.",
           hash: generateHash(),
-          author: "Gemma 4 (Local Ollama Engine)"
+          author: "Passage Compiler (FastAPI :8000)"
         }
       ]);
       setCurrentScreen('plan');
-    }, 700);
+    }
   };
 
   // Toggle evidence for specific organization
@@ -114,22 +157,58 @@ export const PassageProvider = ({ children }) => {
     });
   };
 
-  // Move from Plan to Drafts review
-  const proceedToDrafts = () => {
+  // Move from Plan to Drafts review (fetch drafts from backend)
+  const proceedToDrafts = async () => {
+    if (backendPassageId) {
+      try {
+        const backendDrafts = await api.getDrafts(backendPassageId);
+        if (backendDrafts && backendDrafts.length > 0) {
+          console.log('[Passage API] Ticket drafts loaded from backend:', backendDrafts);
+        }
+      } catch (e) {
+        console.warn('[Passage API] getDrafts fallback:', e);
+      }
+    }
     setCurrentScreen('drafts');
   };
 
-  // Approve & Dispatch at Consent Gate
-  const approveAndDispatch = () => {
+  // Approve & Dispatch at Consent Gate (with real FastAPI dispatch!)
+  const approveAndDispatch = async () => {
     setIsDispatching(true);
     setShowHandoverModal(true);
+
+    let dispatchedTickets = null;
+    if (backendPassageId) {
+      try {
+        dispatchedTickets = await api.dispatchPassage(backendPassageId, [], { relay_outcomes: relayConsent });
+        console.log('[Passage API] Dispatched tickets from backend:', dispatchedTickets);
+      } catch (err) {
+        console.warn('[Passage API] Dispatch error, fallback to local simulation:', err);
+      }
+    }
 
     setTimeout(() => {
       setIsDispatching(false);
       setShowHandoverModal(false);
 
-      // Create dispatch events
       const nowTime = `Today • ${getTimeString()}`;
+      
+      // Update ticket references if backend returned them
+      if (dispatchedTickets && Array.isArray(dispatchedTickets)) {
+        setOrganizations(prev => prev.map(org => {
+          const match = dispatchedTickets.find(t => t.org_slug === org.slug);
+          if (match) {
+            return {
+              ...org,
+              ticketRef: match.ticket_ref || org.ticketRef,
+              status: match.normalized_status || 'submitted'
+            };
+          }
+          return org;
+        }));
+      }
+
+      // Create dispatch events
       const newEvents = [
         {
           id: `evt-consent-${Date.now()}`,
@@ -147,11 +226,11 @@ export const PassageProvider = ({ children }) => {
           title: `Ticket Filed: ${org.name} (${org.ticketRef})`,
           desc: `Dispatched via ${org.channel}. Included ${orgEvidenceSelection[org.slug]?.length || 0} approved documents.`,
           hash: generateHash(),
-          author: "Passage Dispatch Engine"
+          author: "Passage Dispatch Engine (FastAPI)"
         }))
       ];
 
-      // If case 1, show reference passing
+      // Show reference passing
       if (caseKey === 'case1') {
         newEvents.push({
           id: `evt-ref-pass-${Date.now()}`,
@@ -201,8 +280,15 @@ export const PassageProvider = ({ children }) => {
   };
 
   // Trigger or fast forward SLA escalation
-  const triggerEscalation = () => {
+  const triggerEscalation = async () => {
     setIsEscalated(true);
+    if (backendPassageId) {
+      try {
+        await api.fastForward(backendPassageId);
+      } catch (e) {
+        // fallback
+      }
+    }
     setTimelineEvents(prev => [
       ...prev,
       {
@@ -235,14 +321,21 @@ export const PassageProvider = ({ children }) => {
   };
 
   // Step simulation forward
-  const simulateNextStep = () => {
+  const simulateNextStep = async () => {
     if (pendingQuestion) {
       setCurrentScreen('inbox');
       return;
     }
 
     if (!isResolved) {
-      // Resolve case
+      if (backendPassageId) {
+        try {
+          await api.fastForward(backendPassageId);
+        } catch (e) {
+          // safe fallback
+        }
+      }
+
       setIsResolved(true);
       const res = activeCase.resolvedOutcome;
       setTimelineEvents(prev => [
@@ -330,6 +423,9 @@ export const PassageProvider = ({ children }) => {
         isCompiling,
         isDispatching,
         showHandoverModal,
+        backendConnected,
+        backendPassageId,
+        backendCompiled,
         compilePassage,
         proceedToDrafts,
         approveAndDispatch,

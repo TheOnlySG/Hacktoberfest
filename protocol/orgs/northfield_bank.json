@@ -1,0 +1,25 @@
+{
+  "slug": "northfield_bank",
+  "name": "Northfield Bank",
+  "domain": "banking",
+  "channels": [
+    {"type": "helpdesk_rest", "priority": 1},
+    {"type": "sandbox_api", "priority": 2}
+  ],
+  "ticket_type": "bank.transaction_complaint.v1",
+  "schema": "schemas/bank.transaction_complaint.v1.json",
+  "triggers": {"identifiers": ["rrn", "bank_account"], "issue_types": ["payment_failure"]},
+  "required_fields": ["account_last_four", "debit_rrn", "amount"],
+  "evidence_policy": {
+    "allow": ["statement_extract", "sms_proof"],
+    "deny": ["merchant_chat"]
+  },
+  "depends_on": [{"org": "payeasy", "need": "ticket_ref", "as": "tpap_incident_ref"}],
+  "sla": {"first_response_hours": 48, "resolution_hours": 120, "escalate_to": "rbi_ombudsman"},
+  "status_map": {
+    "OPEN": "submitted",
+    "IN_PROGRESS": "in_progress",
+    "CLOSED": "resolved"
+  },
+  "verified": {"by": "team", "on": "2026-10-04", "source": "fictional demo profile"}
+}

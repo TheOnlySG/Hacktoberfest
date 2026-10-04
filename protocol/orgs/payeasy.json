@@ -1,0 +1,24 @@
+{
+  "slug": "payeasy",
+  "name": "PayEasy",
+  "domain": "fintech",
+  "channels": [
+    {"type": "sandbox_api", "priority": 1}
+  ],
+  "ticket_type": "payment_app.dispute.v1",
+  "schema": "schemas/payment_app.dispute.v1.json",
+  "triggers": {"identifiers": ["upi", "txn_id"], "issue_types": ["payment_failure"]},
+  "required_fields": ["upi_txn_id", "remitter_vpa", "amount"],
+  "evidence_policy": {
+    "allow": ["app_screenshot"],
+    "deny": ["bank_full_account", "merchant_private_chat"]
+  },
+  "depends_on": [],
+  "sla": {"first_response_hours": 24, "resolution_hours": 48, "escalate_to": "rbi_ombudsman"},
+  "status_map": {
+    "OPEN": "submitted",
+    "PENDING": "in_progress",
+    "RESOLVED": "resolved"
+  },
+  "verified": {"by": "team", "on": "2026-10-04", "source": "fictional demo profile"}
+}

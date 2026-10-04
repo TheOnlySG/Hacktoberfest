@@ -1,0 +1,28 @@
+{
+  "slug": "swiftcourier",
+  "name": "SwiftCourier",
+  "domain": "logistics",
+  "channels": [
+    {"type": "sandbox_api", "priority": 1},
+    {"type": "email", "address": "claims@swiftcourier.example", "priority": 2},
+    {"type": "passage_link", "priority": 3}
+  ],
+  "ticket_type": "courier.damage_inspection.v1",
+  "schema": "schemas/courier.damage_inspection.v1.json",
+  "triggers": {"identifiers": ["awb", "courier"], "issue_types": ["damaged_on_arrival"]},
+  "required_fields": ["awb", "delivery_date", "damage_type"],
+  "evidence_policy": {
+    "allow": ["outer_package_photos", "delivery_notification"],
+    "deny": ["payment_proof", "other_party_chat"]
+  },
+  "depends_on": [{"org": "shopmart", "need": "ticket_ref", "as": "shipper_claim_ref"}],
+  "sla": {"first_response_hours": 24, "resolution_hours": 96, "escalate_to": "swiftcourier-nodal-officer"},
+  "status_map": {
+    "OPEN": "submitted",
+    "VISIT_SCHEDULED": "in_progress",
+    "INSPECTED": "in_progress",
+    "CLOSED_APPROVED": "resolved",
+    "CLOSED_REJECTED": "rejected"
+  },
+  "verified": {"by": "team", "on": "2026-10-04", "source": "fictional demo profile"}
+}

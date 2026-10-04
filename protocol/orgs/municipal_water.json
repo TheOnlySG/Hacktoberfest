@@ -1,0 +1,25 @@
+{
+  "slug": "municipal_water",
+  "name": "Municipal Water Dept",
+  "domain": "civic",
+  "channels": [
+    {"type": "open311", "priority": 1},
+    {"type": "sandbox_api", "priority": 2}
+  ],
+  "ticket_type": "municipality.water_leak.v1",
+  "schema": "schemas/municipality.water_leak.v1.json",
+  "triggers": {"identifiers": ["water_burst", "civic_location"], "issue_types": ["infrastructure_failure"]},
+  "required_fields": ["service_code", "latitude", "longitude", "description"],
+  "evidence_policy": {
+    "allow": ["street_photos"],
+    "deny": ["insurance_policy"]
+  },
+  "depends_on": [],
+  "sla": {"first_response_hours": 4, "resolution_hours": 24, "escalate_to": "municipal_commissioner"},
+  "status_map": {
+    "OPEN": "submitted",
+    "IN_PROGRESS": "in_progress",
+    "CLOSED": "resolved"
+  },
+  "verified": {"by": "team", "on": "2026-10-04", "source": "fictional demo profile"}
+}

@@ -1,0 +1,25 @@
+{
+  "slug": "shopmart",
+  "name": "ShopMart",
+  "domain": "e-commerce",
+  "channels": [
+    {"type": "sandbox_api", "priority": 1}
+  ],
+  "ticket_type": "marketplace.return_replace.v1",
+  "schema": "schemas/marketplace.return_replace.v1.json",
+  "triggers": {"identifiers": ["order_id", "merchant"], "issue_types": ["damaged_on_arrival"]},
+  "required_fields": ["order_id", "item_sku", "issue_type", "requested_outcome"],
+  "evidence_policy": {
+    "allow": ["invoice", "item_photos", "outer_package_photos"],
+    "deny": ["other_party_chat"]
+  },
+  "depends_on": [],
+  "sla": {"first_response_hours": 24, "resolution_hours": 72, "escalate_to": "consumer_forum"},
+  "status_map": {
+    "OPEN": "submitted",
+    "ACKNOWLEDGED": "in_progress",
+    "PROCESSING": "in_progress",
+    "RESOLVED": "resolved"
+  },
+  "verified": {"by": "team", "on": "2026-10-04", "source": "fictional demo profile"}
+}

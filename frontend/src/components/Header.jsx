@@ -12,7 +12,8 @@ export default function Header() {
     setActiveRole,
     activeCase,
     pendingQuestion,
-    organizations
+    organizations,
+    backendConnected
   } = usePassage();
 
   return (
@@ -55,9 +56,9 @@ export default function Header() {
           {/* Right: Engine Badge & User Avatar */}
           <div className="flex items-center gap-4">
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f8f3ea] border border-[#ddd5c7]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#cbd6c6]"></span>
+              <span className={`w-1.5 h-1.5 rounded-full ${backendConnected ? 'bg-emerald-500 animate-pulse' : 'bg-[#cbd6c6]'}`}></span>
               <span className="font-label-sm text-[10px] uppercase tracking-wider text-[#67625a]">
-                Gemma 4 • Local Ollama
+                {backendConnected ? 'FastAPI :8000 Live' : 'Gemma 4 • Local Mode'}
               </span>
             </div>
 

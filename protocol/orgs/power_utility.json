@@ -1,0 +1,24 @@
+{
+  "slug": "power_utility",
+  "name": "Power Utility",
+  "domain": "utility",
+  "channels": [
+    {"type": "sandbox_api", "priority": 1}
+  ],
+  "ticket_type": "utility.hazard_report.v1",
+  "schema": "schemas/utility.hazard_report.v1.json",
+  "triggers": {"identifiers": ["power_meter", "hazard"], "issue_types": ["infrastructure_failure"]},
+  "required_fields": ["box_number", "hazard_type", "immediate_danger"],
+  "evidence_policy": {
+    "allow": ["hazard_photos"],
+    "deny": ["vehicle_policy"]
+  },
+  "depends_on": [],
+  "sla": {"first_response_hours": 2, "resolution_hours": 12, "escalate_to": "safety_director"},
+  "status_map": {
+    "OPEN": "submitted",
+    "DE_ENERGIZED": "in_progress",
+    "RESOLVED": "resolved"
+  },
+  "verified": {"by": "team", "on": "2026-10-04", "source": "fictional demo profile"}
+}

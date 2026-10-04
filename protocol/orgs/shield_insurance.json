@@ -1,0 +1,25 @@
+{
+  "slug": "shield_insurance",
+  "name": "Shield Insurance",
+  "domain": "insurance",
+  "channels": [
+    {"type": "email", "address": "claims@shieldmotor.example", "priority": 1},
+    {"type": "sandbox_api", "priority": 2}
+  ],
+  "ticket_type": "insurer.claim_intimation.v1",
+  "schema": "schemas/insurer.claim_intimation.v1.json",
+  "triggers": {"identifiers": ["policy_number", "vehicle_reg"], "issue_types": ["property_damage"]},
+  "required_fields": ["policy_number", "vehicle_reg", "loss_description"],
+  "evidence_policy": {
+    "allow": ["policy_pdf", "vehicle_photos", "civic_report"],
+    "deny": []
+  },
+  "depends_on": [{"org": "municipal_water", "need": "ticket_ref", "as": "third_party_incident_ref"}],
+  "sla": {"first_response_hours": 48, "resolution_hours": 168, "escalate_to": "irda_ombudsman"},
+  "status_map": {
+    "OPEN": "submitted",
+    "SURVEY_SCHEDULED": "in_progress",
+    "CLAIM_PAID": "resolved"
+  },
+  "verified": {"by": "team", "on": "2026-10-04", "source": "fictional demo profile"}
+}
